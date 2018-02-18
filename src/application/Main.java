@@ -20,6 +20,7 @@ public class Main extends Application {
       primaryStage.setTitle("Library viewer");
       primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/resources/icon.png")));
       primaryStage.setScene(scene);
+      primaryStage.setMaximized(true);
       primaryStage.show();
     } catch (Exception e) {
       e.printStackTrace();

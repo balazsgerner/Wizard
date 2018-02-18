@@ -1,6 +1,8 @@
 package model;
 
 import java.io.File;
+import java.sql.Timestamp;
+import java.util.Calendar;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jaudiotagger.audio.AudioFile;
@@ -26,7 +28,7 @@ public class MusicFile {
   public String getPath() {
     return file.getFile().getAbsolutePath();
   }
-  
+
   public String getExtension() {
     return FilenameUtils.getExtension(file.getFile().getName());
   }
@@ -53,6 +55,22 @@ public class MusicFile {
 
   public void setTitle(String title) {
     // this.title = title;
+  }
+
+  public byte[] getArtwork() {
+    return tag.getFirstArtwork().getBinaryData();
+  }
+
+  public String getGenre() {
+    return tag.getFirst(FieldKey.GENRE);
+  }
+
+  public String getYear() {
+    String rawYear = tag.getFirst(FieldKey.YEAR);
+    if ("m4a".equals(getExtension()) && (rawYear != null || rawYear.isEmpty())) {
+      return rawYear.substring(0, 4);
+    }
+    return rawYear;
   }
 
 }

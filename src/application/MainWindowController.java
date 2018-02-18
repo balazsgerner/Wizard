@@ -13,23 +13,28 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
 import model.MusicFile;
 
 public class MainWindowController implements Initializable {
 
   @FXML
-  private BorderPane root;
+  private Parent root;
 
   @FXML
   private MenuItem openMenuItem;
@@ -107,12 +112,36 @@ public class MainWindowController implements Initializable {
     titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
     TableColumn<MusicFile, String> albumColumn = new TableColumn<>("Album");
     albumColumn.setCellValueFactory(new PropertyValueFactory<>("album"));
+    TableColumn<MusicFile, String> genreColumn = new TableColumn<>("Genre");
+    genreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
+    TableColumn<MusicFile, String> yearColumn = new TableColumn<>("Year");
+    yearColumn.setCellValueFactory(new PropertyValueFactory<>("year"));
     musicDetails.setItems(model);
+    musicDetails.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
     extensionColumn.setVisible(false);
     pathColumn.setVisible(false);
-    musicDetails.getColumns().addAll(extensionColumn, pathColumn, bandColumn, titleColumn, albumColumn);
+    musicDetails.getColumns().addAll(extensionColumn, pathColumn, bandColumn, titleColumn, albumColumn, yearColumn, genreColumn);
     musicDetails.getSortOrder().add(bandColumn);
+
+    musicDetails.setOnMouseClicked(e -> openTrackDetailsView(e));
+  }
+
+  private void openTrackDetailsView(MouseEvent e) {
+    TableViewSelectionModel<MusicFile> selectionModel = musicDetails.getSelectionModel();
+    boolean selectionEmpty = selectionModel.getSelectedItem() == null;
+    boolean doubleClick = e.getButton().equals(MouseButton.PRIMARY) && e.getClickCount() == 2;
+    if (doubleClick && !selectionEmpty) {
+      try {
+        FXMLLoader trackDetailsLoader = new FXMLLoader(getClass().getResource("/view/track_details.fxml"));
+        trackDetailsLoader.setController(new TrackDetailsController(root, selectionModel.getSelectedItem()));
+        Parent trackDetailsRoot = trackDetailsLoader.load();
+        root.getScene().setRoot(trackDetailsRoot);
+
+      } catch (IOException e1) {
+        e1.printStackTrace();
+      }
+    }
   }
 
 }

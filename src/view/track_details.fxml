@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Rectangle2D?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="root" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+   <center>
+      <GridPane>
+        <columnConstraints>
+          <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="250.0" />
+          <ColumnConstraints hgrow="ALWAYS" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="250.0" vgrow="NEVER" />
+          <RowConstraints vgrow="ALWAYS" />
+        </rowConstraints>
+         <children>
+            <VBox prefHeight="250.0" style="-fx-border-style: solid; -fx-border-width: 0 0 1px 0;" GridPane.columnIndex="1">
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+               <children>
+                  <Label fx:id="lblPath" text="Path" textFill="#757575">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="lblArtist" text="Artist">
+                     <font>
+                        <Font name="System Bold" size="20.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="lblTitle" text="Title">
+                     <font>
+                        <Font size="20.0" />
+                     </font>
+                  </Label>
+               </children>
+            </VBox>
+            <VBox style="-fx-border-style: solid; -fx-border-width: 0 1px 0 0; -fx-background-color: #c1c1c1;" GridPane.rowSpan="2">
+               <children>
+                  <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="250.0" prefWidth="250.0" style="-fx-border-style: solid; -fx-border-width: 0 0 1px 0;">
+                     <center>
+                        <ImageView fx:id="imgAlbum" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true">
+                           <viewport>
+                              <Rectangle2D />
+                           </viewport>
+                        </ImageView>
+                     </center>
+                  </BorderPane>
+                  <Label text="Album" textFill="#757575">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                     <padding>
+                        <Insets left="5.0" top="5.0" />
+                     </padding>
+                  </Label>
+                  <Label fx:id="lblAlbum" text="lblAlbum">
+                     <padding>
+                        <Insets left="5.0" top="5.0" />
+                     </padding>
+                     <font>
+                        <Font size="20.0" />
+                     </font>
+                  </Label>
+                  <Label text="Year" textFill="#757575">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                     <padding>
+                        <Insets left="5.0" top="5.0" />
+                     </padding>
+                  </Label>
+                  <Label fx:id="lblYear" text="lblYear">
+                     <padding>
+                        <Insets left="5.0" top="5.0" />
+                     </padding>
+                     <font>
+                        <Font size="20.0" />
+                     </font>
+                  </Label>
+                  <Label text="Genre" textFill="#757575">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                     <padding>
+                        <Insets left="5.0" top="5.0" />
+                     </padding>
+                  </Label>
+                  <Label fx:id="lblGenre" text="lblGenre">
+                     <padding>
+                        <Insets left="5.0" top="5.0" />
+                     </padding>
+                     <font>
+                        <Font size="20.0" />
+                     </font>
+                  </Label>
+               </children>
+               <GridPane.margin>
+                  <Insets />
+               </GridPane.margin>
+            </VBox>
+         </children>
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
+      </GridPane>
+   </center>
+   <top>
+      <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+        <items>
+          <Button fx:id="backBtn" mnemonicParsing="false" onAction="#backToMainView" text="Back" />
+        </items>
+      </ToolBar>
+   </top>
+</BorderPane>
