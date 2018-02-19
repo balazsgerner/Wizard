@@ -84,8 +84,8 @@ public class MainWindowController implements Initializable {
     }
   }
 
-  private void scanLibrary(File library) throws IOException {
-    for (File file : library.listFiles()) {
+  private void scanLibrary(File library) {
+    Arrays.asList(library.listFiles()).forEach(file -> {
       if (file.isDirectory()) {
         scanLibrary(file);
       } else {
@@ -94,7 +94,8 @@ public class MainWindowController implements Initializable {
           model.add(new MusicFile(file));
         }
       }
-    }
+    });
+
   }
 
   @SuppressWarnings("unchecked")
