@@ -1,8 +1,6 @@
 package model;
 
 import java.io.File;
-import java.sql.Timestamp;
-import java.util.Calendar;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jaudiotagger.audio.AudioFile;
@@ -67,10 +65,19 @@ public class MusicFile {
 
   public String getYear() {
     String rawYear = tag.getFirst(FieldKey.YEAR);
-    if ("m4a".equals(getExtension()) && (rawYear != null || rawYear.isEmpty())) {
+    if ("m4a".equals(getExtension()) && (rawYear != null && !rawYear.isEmpty())) {
       return rawYear.substring(0, 4);
     }
     return rawYear;
+  }
+
+  public Integer getTrack() {
+    return Integer.valueOf(tag.getFirst(FieldKey.TRACK));
+  }
+
+  @Override
+  public String toString() {
+    return "[artist: " + getBand() + ", album: " + getAlbum() + ", title: " + getTitle() + "]";
   }
 
 }

@@ -11,6 +11,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -135,7 +136,17 @@ public class MainWindowController implements Initializable {
     if (doubleClick && !selectionEmpty) {
       try {
         FXMLLoader trackDetailsLoader = new FXMLLoader(getClass().getResource("/view/track_details.fxml"));
-        trackDetailsLoader.setController(new TrackDetailsController(root, selectionModel.getSelectedItem()));
+
+        MusicFile selectedFile = selectionModel.getSelectedItem();
+        String band = selectedFile.getBand();
+        String album = selectedFile.getAlbum();
+        FilteredList<MusicFile> tracksFromSameAlbum = model
+            .filtered(m -> (album != null && m.getAlbum().equals(album)) && (band != null && m.getBand().equals(band)));
+
+        TrackDetailsParamBean paramBean = new TrackDetailsParamBean();
+        paramBean.musicFile = selectedFile;
+        paramBean.tracksFromSameAlbum = tracksFromSameAlbum;
+        trackDetailsLoader.setController(new TrackDetailsController(root, paramBean));
         Parent trackDetailsRoot = trackDetailsLoader.load();
         root.getScene().setRoot(trackDetailsRoot);
 
