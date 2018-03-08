@@ -34,5 +34,15 @@
         <artifactId>mongodb-driver</artifactId>
         <version>3.6.2</version>
     </dependency>
+	<dependency>
+	    <groupId>com.couchbase.lite</groupId>
+	    <artifactId>couchbase-lite-java-sqlcipher</artifactId>
+	    <version>1.4.0</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.couchbase.lite</groupId>
+	    <artifactId>couchbase-lite-java</artifactId>
+	    <version>1.4.0</version>
+	</dependency>
   </dependencies>
 </project>
