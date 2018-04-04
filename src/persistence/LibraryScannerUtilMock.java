@@ -12,17 +12,17 @@ import model.MusicFile;
 
 public class LibraryScannerUtilMock {
 
-  protected static final String LIBRARY_PATH = "C:\\Users\\Gerner\\Music";
+  public static final String LIBRARY_PATH = "C:\\Users\\Gerner\\Music";
 
   protected List<String> supportedExtensions = Arrays.asList("mp3", "m4a", "flac");
 
   protected List<MusicFile> model = new ArrayList<MusicFile>();
 
-  protected List<MusicFile> getModel() {
+  public List<MusicFile> getModel() {
     return model;
   }
 
-  protected void scanLibrary(File library) throws IOException {
+  public void scanLibrary(File library) throws IOException {
     for (File file : library.listFiles()) {
       if (file.isDirectory()) {
         scanLibrary(file);

@@ -18,7 +18,7 @@ public class Main extends Application {
       scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 
       primaryStage.setTitle("Library viewer");
-      primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/resources/icon.png")));
+      primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/resources/images/icon.png")));
       primaryStage.setScene(scene);
       primaryStage.setMaximized(true);
       primaryStage.show();
