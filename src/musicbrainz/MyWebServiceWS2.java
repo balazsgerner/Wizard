@@ -1,16 +1,13 @@
 package musicbrainz;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.musicbrainz.webservice.DefaultWebServiceWs2;
@@ -55,46 +52,29 @@ public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
     StringBuilder url = new StringBuilder();
     Map<String, String> urlParams = new HashMap<String, String>();
 
-    // Type is not requested/allowed anymore in ws2.
-    // urlParams.put("type", this.type);
-
-    // append filter params
-
-    if (filterParams != null)
+    if (filterParams != null) {
       urlParams.putAll(filterParams);
+    }
 
-    // append protocol, host and port
     url.append(this.protocol).append("://").append(this.getHost());
-    if (this.port != null)
+    if (this.port != null) {
       url.append(":").append(this.port);
-
-    // append path
+    }
     url.append(PATHPREFIX).append("/").append(WS_VERSION).append("/").append(entity).append("/").append(id);
 
-    // Handle COLLECTION sintax exception.
-
-    if (entity.equals(COLLECTION) && !id.isEmpty()) {
-      url.append("/" + RELEASES_INC);
-    }
-
-    // build space separated include param
-    if (includeParams != null) {
-      urlParams.put("inc", StringUtils.join(includeParams, "+"));
-    }
-
-    // append params
     url.append("?");
+    url.append("query=").append(urlParams.get("query"));
+    urlParams.remove("query");
+    urlParams.remove("offset");
     Iterator<Entry<String, String>> it = urlParams.entrySet().iterator();
     while (it.hasNext()) {
       Entry<String, String> e = it.next();
-      try {
-        url.append(e.getKey()).append("=").append(URLEncoder.encode(e.getValue(), URL_ENCODING)).append("&");
-      } catch (UnsupportedEncodingException ex) {
-        log.error("Internal Error: Could not encode url parameter " + e.getKey(), ex);
-      }
+      url.append("&").append(e.getKey()).append("=").append(e.getValue());
     }
 
-    return url.substring(0, url.length() - 1);
+    String urlString = url.toString();
+    MusicBrainzWSDemo.getInstance().getPw().println(urlString);
+    return urlString;
   }
 
   @Override
