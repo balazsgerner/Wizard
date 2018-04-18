@@ -74,6 +74,7 @@ public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
 
     String urlString = url.toString();
     MusicBrainzWSDemo.getInstance().getPw().println(urlString);
+    System.out.println(urlString);
     return urlString;
   }
 

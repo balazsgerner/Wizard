@@ -15,7 +15,6 @@ import org.apache.log4j.Logger;
 import org.musicbrainz.controller.Artist;
 import org.musicbrainz.model.entity.ArtistWs2;
 import org.musicbrainz.model.searchresult.ArtistResultWs2;
-import org.musicbrainz.wsxml.impl.JDOMParserWs2;
 
 import model.MusicFile;
 import persistence.LibraryScannerUtilMock;
@@ -29,31 +28,31 @@ public class MusicBrainzWSDemo {
   private static MusicBrainzWSDemo instance;
 
   public static void main(String[] args) {
-    Logger log = Logger.getLogger(JDOMParserWs2.class);
-    log.setLevel(Level.OFF);
+    Logger.getRootLogger().setLevel(Level.OFF);
     instance = new MusicBrainzWSDemo();
     try {
-      instance.queryMB();
+      instance.queryArtists();
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
-  private void queryMB() throws IOException {
+  private void queryArtists() throws IOException {
     Properties prop = new Properties();
     prop.load(getClass().getResourceAsStream("/resources/properties/musicbrainz.properties"));
-    try (PrintWriter pw = new PrintWriter(new File(prop.getProperty("output_file")))) {
-      this.pw = pw;
+    libraryScanner.scanLibrary(new File(LibraryScannerUtilMock.LIBRARY_PATH));
 
-      libraryScanner.scanLibrary(new File(LibraryScannerUtilMock.LIBRARY_PATH));
-      List<MusicFile> model = libraryScanner.getModel();
-      Set<String> artistNames = new TreeSet<>();
-      model.forEach(e -> {
-        String bandName = e.getBand().trim();
-        if (!StringUtils.isEmpty(bandName)) {
-          artistNames.add(bandName);
-        }
-      });
+    List<MusicFile> model = libraryScanner.getModel();
+    Set<String> artistNames = new TreeSet<>();
+    model.forEach(e -> {
+      String bandName = e.getBand().trim();
+      if (!StringUtils.isEmpty(bandName)) {
+        artistNames.add(bandName);
+      }
+    });
+
+    try (PrintWriter pw = new PrintWriter(new File(prop.getProperty("artist_output_file")))) {
+      this.pw = pw;
 
       Artist artist = new Artist();
       artist.setQueryWs(new MyHttpWSImpl());
@@ -61,13 +60,12 @@ public class MusicBrainzWSDemo {
 
       String newLine = System.lineSeparator();
       for (String band : artistNames) {
-        pw.println(newLine);
         String formattedString = band.replace(' ', '+');
         String searchString = formattedString.replaceAll("!", "");
 
         pw.println(StringUtils.repeat("-", 100));
         pw.println(searchString);
-        System.out.println("query: " + searchString);
+        System.out.print("query: " + searchString);
         artist.search(searchString);
         List<ArtistResultWs2> resultList = artist.getFirstSearchResultPage();
         pw.println(StringUtils.repeat("-", 100));
@@ -82,6 +80,12 @@ public class MusicBrainzWSDemo {
         pw.println(newLine);
       }
     }
+  }
+
+  private String formatString(String band) {
+    String formattedString = band.replace(' ', '+');
+    String searchString = formattedString.replaceAll("!", "");
+    return searchString;
   }
 
   public PrintWriter getPw() {

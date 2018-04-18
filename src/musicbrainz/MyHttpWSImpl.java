@@ -247,7 +247,7 @@ public class MyHttpWSImpl extends MyWebServiceWS2 {
         lastHitTime =System.currentTimeMillis();
         
         int statusCode = response.getStatusLine().getStatusCode();
-    
+
         switch (statusCode)
         {
           case HttpStatus.SC_SERVICE_UNAVAILABLE: { 
@@ -267,6 +267,7 @@ public class MyHttpWSImpl extends MyWebServiceWS2 {
                   return null;
           }
           case HttpStatus.SC_OK:
+                  System.out.println(" --> 200 OK");
                   InputStream instream = response.getEntity().getContent();
                   // Check if content is compressed
                   Header contentEncoding = response
@@ -285,6 +286,7 @@ public class MyHttpWSImpl extends MyWebServiceWS2 {
                   throw new ResourceNotFoundException(buildMessage(response, "Not found"));
 
           case HttpStatus.SC_BAD_REQUEST:
+                  System.out.println(" --> 403 Bad Request");
                   throw new RequestException(buildMessage(response,"Bad Request"));
 
           case HttpStatus.SC_FORBIDDEN:
