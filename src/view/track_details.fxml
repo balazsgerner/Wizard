@@ -4,9 +4,15 @@
 <?import javafx.geometry.Rectangle2D?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -14,7 +20,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="root" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane fx:id="root" prefHeight="886.0" prefWidth="1299.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
    <center>
       <GridPane>
         <columnConstraints>
@@ -23,100 +29,231 @@
         </columnConstraints>
         <rowConstraints>
           <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="250.0" vgrow="NEVER" />
+            <RowConstraints maxHeight="-Infinity" minHeight="0.0" vgrow="NEVER" />
           <RowConstraints vgrow="ALWAYS" />
         </rowConstraints>
          <children>
-            <VBox prefHeight="250.0" style="-fx-border-style: solid; -fx-border-width: 0 0 1px 0;" GridPane.columnIndex="1">
-               <padding>
-                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-               </padding>
+            <GridPane style="-fx-border-style: solid; -fx-border-width: 0 0 1px 0;" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
+              <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="50.0" />
+                <ColumnConstraints halignment="RIGHT" hgrow="NEVER" />
+              </columnConstraints>
+              <rowConstraints>
+                  <RowConstraints vgrow="ALWAYS" />
+                <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
                <children>
-                  <Label fx:id="lblPath" text="Path" textFill="#757575">
-                     <font>
-                        <Font size="14.0" />
-                     </font>
-                  </Label>
-                  <Label fx:id="lblArtist" text="Artist">
+                  <Label fx:id="lblArtist" text="Artist" GridPane.columnSpan="2" GridPane.rowIndex="1">
                      <font>
                         <Font name="System Bold" size="20.0" />
                      </font>
                   </Label>
-                  <Label fx:id="lblTitle" text="Title">
+                  <Label fx:id="lblTitle" text="Title" GridPane.columnSpan="2" GridPane.rowIndex="2">
                      <font>
                         <Font size="20.0" />
                      </font>
                   </Label>
-               </children>
-            </VBox>
-            <VBox style="-fx-border-style: solid; -fx-border-width: 0 1px 0 0; -fx-background-color: #c1c1c1;" GridPane.rowSpan="2">
-               <children>
-                  <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="250.0" prefWidth="250.0" style="-fx-border-style: solid; -fx-border-width: 0 0 1px 0;">
-                     <center>
-                        <ImageView fx:id="imgAlbum" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true">
-                           <viewport>
-                              <Rectangle2D />
-                           </viewport>
-                        </ImageView>
-                     </center>
-                  </BorderPane>
-                  <Label text="Album" textFill="#757575">
+                  <Label fx:id="lblAlbum" text="Album" GridPane.columnSpan="2" GridPane.rowIndex="3">
+                     <font>
+                        <Font size="20.0" />
+                     </font>
+                  </Label>
+                  <Separator prefHeight="1.0" style="-fx-background-color: black; -fx-border-style: none;" GridPane.columnSpan="2" GridPane.rowIndex="4" />
+                  <Label fx:id="lblYear" text="Year" GridPane.rowIndex="5">
                      <font>
                         <Font size="14.0" />
                      </font>
-                     <padding>
-                        <Insets left="5.0" top="5.0" />
-                     </padding>
                   </Label>
-                  <Label fx:id="lblAlbum" text="lblAlbum">
-                     <padding>
-                        <Insets left="5.0" top="5.0" />
-                     </padding>
-                     <font>
-                        <Font size="20.0" />
-                     </font>
-                  </Label>
-                  <Label text="Year" textFill="#757575">
+                  <Label fx:id="lblPath" text="Path" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                     <GridPane.margin>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </GridPane.margin>
                      <font>
                         <Font size="14.0" />
                      </font>
-                     <padding>
-                        <Insets left="5.0" top="5.0" />
-                     </padding>
                   </Label>
-                  <Label fx:id="lblYear" text="lblYear">
-                     <padding>
-                        <Insets left="5.0" top="5.0" />
-                     </padding>
-                     <font>
-                        <Font size="20.0" />
-                     </font>
-                  </Label>
-                  <Label text="Genre" textFill="#757575">
-                     <font>
-                        <Font size="14.0" />
-                     </font>
-                     <padding>
-                        <Insets left="5.0" top="5.0" />
-                     </padding>
-                  </Label>
-                  <Label fx:id="lblGenre" text="lblGenre">
-                     <padding>
-                        <Insets left="5.0" top="5.0" />
-                     </padding>
-                     <font>
-                        <Font size="20.0" />
-                     </font>
-                  </Label>
+                  <MenuButton fx:id="btnPerformQuery" mnemonicParsing="false" prefHeight="35.0" text="Perform query..." GridPane.columnIndex="1" GridPane.rowIndex="3" />
                </children>
                <GridPane.margin>
                   <Insets />
                </GridPane.margin>
-            </VBox>
-            <TableView fx:id="albumDetails" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-               <columnResizePolicy>
-                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-               </columnResizePolicy>
-            </TableView>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+            </GridPane>
+            <BorderPane style="-fx-border-style: solid; -fx-border-width: 0 1px 1px 0;">
+               <center>
+                  <ImageView fx:id="imgAlbum" fitHeight="249.0" fitWidth="249.0" pickOnBounds="true" preserveRatio="true">
+                     <viewport>
+                        <Rectangle2D />
+                     </viewport>
+                  </ImageView>
+               </center>
+            </BorderPane>
+            <BorderPane style="-fx-border-style: solid; -fx-border-width: 0 1px 0 0;" GridPane.rowIndex="2">
+               <GridPane.margin>
+                  <Insets />
+               </GridPane.margin>
+               <center>
+                  <GridPane>
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="NEVER" minWidth="75.0" prefWidth="75.0" />
+                      <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                    </rowConstraints>
+                     <children>
+                        <Label text="Track length">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Label>
+                        <Label text="Sample rate" GridPane.rowIndex="2">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Label>
+                        <Label text="Bitrate" GridPane.rowIndex="1">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="lblTrackLength" text="lblTrackLength" GridPane.columnIndex="1" />
+                        <Label fx:id="lblBitRate" text="lblBitRate" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                        <Label fx:id="lblSampleRate" text="lblSampleRate" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <Label text="Genre" GridPane.rowIndex="3">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="lblGenre" text="lblGenre" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                     </children>
+                     <BorderPane.margin>
+                        <Insets bottom="10.0" left="10.0" right="15.0" top="10.0" />
+                     </BorderPane.margin>
+                  </GridPane>
+               </center>
+            </BorderPane>
+            <SplitPane dividerPositions="0.2559694364851958" GridPane.columnIndex="1" GridPane.rowIndex="2">
+              <items>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                     <children>
+                        <GridPane layoutX="115.0" layoutY="176.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="NEVER" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                           <children>
+                              <Label text="Original metadata (from tag)">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font>
+                                 <padding>
+                                    <Insets left="5.0" />
+                                 </padding>
+                              </Label>
+                              <TableView prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
+                                <columns>
+                                  <TableColumn prefWidth="75.0" text="Attribute" />
+                                  <TableColumn prefWidth="75.0" text="Value" />
+                                </columns>
+                                 <columnResizePolicy>
+                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                 </columnResizePolicy>
+                              </TableView>
+                           </children>
+                        </GridPane>
+                     </children>
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </AnchorPane>
+                <AnchorPane>
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                     <children>
+                        <GridPane layoutX="150.0" layoutY="161.0" prefHeight="594.0" prefWidth="699.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="NEVER" minWidth="10.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="NEVER" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                           <children>
+                              <SplitPane dividerPositions="0.34686346863468637" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                                <items>
+                                    <GridPane hgap="5.0">
+                                      <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                                        <ColumnConstraints hgrow="NEVER" minWidth="10.0" />
+                                      </columnConstraints>
+                                      <rowConstraints>
+                                        <RowConstraints minHeight="10.0" />
+                                      </rowConstraints>
+                                       <children>
+                                          <ListView>
+                                             <opaqueInsets>
+                                                <Insets />
+                                             </opaqueInsets>
+                                             <padding>
+                                                <Insets bottom="5.0" right="5.0" />
+                                             </padding>
+                                          </ListView>
+                                          <VBox spacing="5.0" GridPane.columnIndex="1">
+                                             <children>
+                                                <Button fx:id="btnSelectId" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="Select" />
+                                                <Button fx:id="btnAssignId" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="Assign Id to track" />
+                                             </children>
+                                          </VBox>
+                                       </children>
+                                    </GridPane>
+                                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                                       <children>
+                                          <TableView layoutX="175.0" layoutY="34.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                            <columns>
+                                              <TableColumn prefWidth="75.0" text="Attribute" />
+                                              <TableColumn prefWidth="75.0" text="Value" />
+                                            </columns>
+                                             <columnResizePolicy>
+                                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                             </columnResizePolicy>
+                                          </TableView>
+                                       </children>
+                                    </AnchorPane>
+                                </items>
+                              </SplitPane>
+                           </children>
+                        </GridPane>
+                        <Label layoutX="10.0" layoutY="10.0" text="Query results">
+                           <font>
+                              <Font size="16.0" />
+                           </font>
+                           <padding>
+                              <Insets left="5.0" />
+                           </padding>
+                        </Label>
+                     </children>
+                  </AnchorPane>
+              </items>
+               <GridPane.margin>
+                  <Insets />
+               </GridPane.margin>
+            </SplitPane>
          </children>
          <BorderPane.margin>
             <Insets />

@@ -7,6 +7,7 @@ import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.images.Artwork;
 
 public class MusicFile {
 
@@ -56,7 +57,8 @@ public class MusicFile {
   }
 
   public byte[] getArtwork() {
-    return tag.getFirstArtwork().getBinaryData();
+    Artwork artWork = tag.getFirstArtwork();
+    return artWork == null ? null : artWork.getBinaryData();
   }
 
   public String getGenre() {
@@ -65,14 +67,31 @@ public class MusicFile {
 
   public String getYear() {
     String rawYear = tag.getFirst(FieldKey.YEAR);
-    if ("m4a".equals(getExtension()) && (rawYear != null && !rawYear.isEmpty())) {
+    if (isMp4() && (rawYear != null && !rawYear.isEmpty())) {
       return rawYear.substring(0, 4);
     }
     return rawYear;
   }
 
+  private boolean isMp4() {
+    return "m4a".equals(getExtension());
+  }
+
   public Integer getTrack() {
     return Integer.valueOf(tag.getFirst(FieldKey.TRACK));
+  }
+
+  public String getTrackLength() {
+    int trackLength = file.getAudioHeader().getTrackLength();
+    return String.format("%02d:%02d", trackLength / 60, trackLength % 60);
+  }
+
+  public String getBitRate() {
+    return Long.toString(file.getAudioHeader().getBitRateAsNumber()) + " kbps";
+  }
+
+  public String getSampleRate() {
+    return file.getAudioHeader().getSampleRate() + " Hz";
   }
 
   @Override

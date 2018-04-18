@@ -4,17 +4,15 @@ import java.io.ByteArrayInputStream;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import javafx.collections.FXCollections;
+import application.query.QueryUtility;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import model.MusicFile;
@@ -26,6 +24,15 @@ public class TrackDetailsController implements Initializable {
 
   @FXML
   private Button backBtn;
+
+  @FXML
+  private Button btnAssignId;
+
+  @FXML
+  private Button btnSelectId;
+
+  @FXML
+  private MenuButton btnPerformQuery;
 
   @FXML
   private Label lblPath;
@@ -46,10 +53,16 @@ public class TrackDetailsController implements Initializable {
   private Label lblGenre;
 
   @FXML
-  private ImageView imgAlbum;
+  private Label lblTrackLength;
 
   @FXML
-  private TableView<MusicFile> albumDetails;
+  private Label lblBitRate;
+
+  @FXML
+  private Label lblSampleRate;
+
+  @FXML
+  private ImageView imgAlbum;
 
   private Parent callerWindowRoot;
 
@@ -62,31 +75,14 @@ public class TrackDetailsController implements Initializable {
 
   @Override
   public void initialize(URL arg0, ResourceBundle arg1) {
-    initTableView();
     setTrackData();
+    initQueryMethods();
   }
 
-  @SuppressWarnings("unchecked")
-  private void initTableView() {
-    TableColumn<MusicFile, String> trackColumn = new TableColumn<>("Track");
-    trackColumn.setCellValueFactory(new PropertyValueFactory<>("track"));
-    TableColumn<MusicFile, String> bandColumn = new TableColumn<>("Artist");
-    bandColumn.setCellValueFactory(new PropertyValueFactory<>("band"));
-    TableColumn<MusicFile, String> titleColumn = new TableColumn<>("Title");
-    titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
-    TableColumn<MusicFile, String> albumColumn = new TableColumn<>("Album");
-    albumColumn.setCellValueFactory(new PropertyValueFactory<>("album"));
-    TableColumn<MusicFile, String> genreColumn = new TableColumn<>("Genre");
-    genreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
-    TableColumn<MusicFile, String> yearColumn = new TableColumn<>("Year");
-    yearColumn.setCellValueFactory(new PropertyValueFactory<>("year"));
-    albumDetails.setItems(FXCollections.observableArrayList(paramBean.tracksFromSameAlbum));
-    albumDetails.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
-    albumDetails.getColumns().addAll(trackColumn, bandColumn, titleColumn, albumColumn, yearColumn, genreColumn);
-    albumDetails.getSortOrder().add(trackColumn);
-    albumDetails.getSelectionModel().select(paramBean.musicFile);
-    albumDetails.getSelectionModel().selectedItemProperty().addListener(e -> setCurrentTrackData());
+  private void initQueryMethods() {
+    QueryUtility.getInstance().getQueryMethods().forEach(q -> {
+      btnPerformQuery.getItems().add(new MenuItem(q.getName()));
+    });
   }
 
   private void setTrackData() {
@@ -95,7 +91,7 @@ public class TrackDetailsController implements Initializable {
   }
 
   private void setAlbumData() {
-    MusicFile selectedItem = albumDetails.getSelectionModel().getSelectedItem();
+    MusicFile selectedItem = paramBean.musicFile;
     String album = validateData(selectedItem.getAlbum());
     lblAlbum.setText(album);
     lblAlbum.setTooltip(new Tooltip(album));
@@ -105,11 +101,14 @@ public class TrackDetailsController implements Initializable {
     String genre = validateData(selectedItem.getGenre());
     lblGenre.setText(genre);
     lblGenre.setTooltip(new Tooltip(genre));
-    imgAlbum.setImage(new Image(new ByteArrayInputStream(selectedItem.getArtwork())));
+    byte[] artwork = selectedItem.getArtwork();
+    if (artwork != null) {
+      imgAlbum.setImage(new Image(new ByteArrayInputStream(artwork)));
+    }
   }
 
   private void setCurrentTrackData() {
-    MusicFile selectedItem = albumDetails.getSelectionModel().getSelectedItem();
+    MusicFile selectedItem = paramBean.musicFile;
     String path = validateData(selectedItem.getPath());
     lblPath.setText(path);
     lblPath.setTooltip(new Tooltip(path));
@@ -119,6 +118,15 @@ public class TrackDetailsController implements Initializable {
     String title = validateData(selectedItem.getTitle());
     lblTitle.setText(title);
     lblTitle.setTooltip(new Tooltip(title));
+    String genre = selectedItem.getGenre();
+    lblGenre.setText(genre);
+    lblGenre.setTooltip(new Tooltip(genre));
+    String trackLength = selectedItem.getTrackLength();
+    lblTrackLength.setText(trackLength);
+    String bitRate = selectedItem.getBitRate();
+    lblBitRate.setText(bitRate);
+    String sampleRate = selectedItem.getSampleRate();
+    lblSampleRate.setText(sampleRate);
   }
 
   private String validateData(String rawData) {
