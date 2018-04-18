@@ -77,11 +77,19 @@ public class TrackDetailsController implements Initializable {
   public void initialize(URL arg0, ResourceBundle arg1) {
     setTrackData();
     initQueryMethods();
+    
+    btnPerformQuery.setOnAction(e -> performQuery());
+  }
+
+  private void performQuery() {
   }
 
   private void initQueryMethods() {
-    QueryUtility.getInstance().getQueryMethods().forEach(q -> {
-      btnPerformQuery.getItems().add(new MenuItem(q.getName()));
+    QueryUtility queryUtility = QueryUtility.getInstance();
+    queryUtility.getQueryMethods().forEach(q -> {
+      MenuItem menuItem = new MenuItem(q.getName());
+      menuItem.setOnAction(e -> queryUtility.performQuery(paramBean.musicFile, q.getCode()));
+      btnPerformQuery.getItems().add(menuItem);
     });
   }
 

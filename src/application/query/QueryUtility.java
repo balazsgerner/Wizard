@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import application.query.Query;
+import model.MusicFile;
 
 @XmlRootElement(name = "querymethods")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -31,6 +31,24 @@ public class QueryUtility {
 
   public void setQueryMethods(List<Query> queryMethods) {
     this.queryMethods = queryMethods;
+  }
+
+  public Object performQuery(MusicFile musicFile, String code) {
+    try {
+      switch (code) {
+      case AcoustidQuery.CODE:
+        AcoustidQuery acoustidQuery = new AcoustidQuery();
+        acoustidQuery.init(musicFile);
+        acoustidQuery.performQuery();
+        break;
+      default:
+        break;
+      }
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
 }
