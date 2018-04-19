@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,6 +18,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
@@ -24,6 +26,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.TableViewSelectionModel;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCombination;
@@ -47,11 +50,19 @@ public class MainWindowController implements Initializable {
   private Label trackNumber;
 
   @FXML
+  private Button btnClearFilter;
+
+  @FXML
+  private TextField txtFilter;
+
+  @FXML
   private ProgressIndicator scanProgressIndicator;
 
   private List<String> supportedExtensions = Arrays.asList("mp3", "m4a", "flac");
 
   private ObservableList<MusicFile> model = FXCollections.observableArrayList();
+
+  private FilteredList<MusicFile> filteredModel;
 
   @FXML
   private void openLibrary() throws IOException {
@@ -99,6 +110,11 @@ public class MainWindowController implements Initializable {
 
   }
 
+  @FXML
+  private void clearFilterText() {
+    txtFilter.setText("");
+  }
+
   @SuppressWarnings("unchecked")
   @Override
   public void initialize(URL arg0, ResourceBundle arg1) {
@@ -118,7 +134,10 @@ public class MainWindowController implements Initializable {
     genreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
     TableColumn<MusicFile, String> yearColumn = new TableColumn<>("Year");
     yearColumn.setCellValueFactory(new PropertyValueFactory<>("year"));
-    musicDetails.setItems(model);
+
+    filteredModel = new FilteredList<>(model);
+    musicDetails.setItems(filteredModel);
+
     musicDetails.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
     extensionColumn.setVisible(false);
@@ -127,6 +146,30 @@ public class MainWindowController implements Initializable {
     musicDetails.getSortOrder().add(bandColumn);
 
     musicDetails.setOnMouseClicked(e -> openTrackDetailsView(e));
+    txtFilter.textProperty().addListener(e -> filterTableModel());
+  }
+
+  private void filterTableModel() {
+    filteredModel.setPredicate(p -> {
+      String searchStr = txtFilter.getText().toLowerCase();
+      if (StringUtils.isEmpty(searchStr)) {
+        btnClearFilter.setDisable(true);
+        return true;
+      }
+      btnClearFilter.setDisable(false);
+
+      String band = p.getBand().toLowerCase();
+      String album = p.getAlbum().toLowerCase();
+      String title = p.getTitle().toLowerCase();
+      String genre = p.getGenre().toLowerCase();
+      String year = p.getYear().toLowerCase();
+      if (band.contains(searchStr) || album.contains(searchStr) || title.contains(searchStr) || genre.contains(searchStr)
+          || year.contains(searchStr)) {
+        return true;
+      }
+
+      return false;
+    });
   }
 
   private void openTrackDetailsView(MouseEvent e) {
@@ -138,14 +181,9 @@ public class MainWindowController implements Initializable {
         FXMLLoader trackDetailsLoader = new FXMLLoader(getClass().getResource("/view/track_details.fxml"));
 
         MusicFile selectedFile = selectionModel.getSelectedItem();
-        String band = selectedFile.getBand();
-        String album = selectedFile.getAlbum();
-        FilteredList<MusicFile> tracksFromSameAlbum = model
-            .filtered(m -> (album != null && m.getAlbum().equals(album)) && (band != null && m.getBand().equals(band)));
 
         TrackDetailsParamBean paramBean = new TrackDetailsParamBean();
         paramBean.musicFile = selectedFile;
-        paramBean.tracksFromSameAlbum = tracksFromSameAlbum;
         trackDetailsLoader.setController(new TrackDetailsController(root, paramBean));
         Parent trackDetailsRoot = trackDetailsLoader.load();
         root.getScene().setRoot(trackDetailsRoot);
