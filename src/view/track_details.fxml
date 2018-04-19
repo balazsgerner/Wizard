@@ -163,10 +163,10 @@
                                     <Insets left="5.0" />
                                  </padding>
                               </Label>
-                              <TableView prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
+                              <TableView fx:id="tblOriginal" prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
                                 <columns>
-                                  <TableColumn prefWidth="75.0" text="Attribute" />
-                                  <TableColumn prefWidth="75.0" text="Value" />
+                                  <TableColumn fx:id="orgAttributeColumn" prefWidth="75.0" text="Attribute" />
+                                  <TableColumn fx:id="orgValueColumn" prefWidth="75.0" text="Value" />
                                 </columns>
                                  <columnResizePolicy>
                                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -206,7 +206,7 @@
                                         <RowConstraints minHeight="10.0" />
                                       </rowConstraints>
                                        <children>
-                                          <ListView>
+                                          <ListView fx:id="listQueryResults">
                                              <opaqueInsets>
                                                 <Insets />
                                              </opaqueInsets>
@@ -224,10 +224,10 @@
                                     </GridPane>
                                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
                                        <children>
-                                          <TableView layoutX="175.0" layoutY="34.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                          <TableView fx:id="tblResults" layoutX="175.0" layoutY="34.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                             <columns>
-                                              <TableColumn prefWidth="75.0" text="Attribute" />
-                                              <TableColumn prefWidth="75.0" text="Value" />
+                                              <TableColumn fx:id="resAttributeColumn" prefWidth="75.0" text="Attribute" />
+                                              <TableColumn fx:id="resValueColumn" prefWidth="75.0" text="Value" />
                                             </columns>
                                              <columnResizePolicy>
                                                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -239,7 +239,7 @@
                               </SplitPane>
                            </children>
                         </GridPane>
-                        <Label layoutX="10.0" layoutY="10.0" text="Query results">
+                        <Label fx:id="lblQueryResults" layoutX="10.0" layoutY="10.0" text="Query results">
                            <font>
                               <Font size="16.0" />
                            </font>

@@ -1,7 +1,10 @@
 package application.query;
 
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -11,24 +14,27 @@ import model.MusicFile;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Query {
 
-  @XmlTransient
-  protected boolean initialized = false;
-
   protected String name;
 
   protected String code;
 
+  @XmlElement(name = "class")
+  protected String className;
+
+  @XmlTransient
+  protected Map<String, Map<String, Object>> results;
+
   @XmlTransient
   protected MusicFile musicFile;
 
-  public void init(MusicFile musicFile) {
+  protected void init() {
     // to be overridden
-    this.musicFile = musicFile;
-    this.initialized = true;
   }
 
-  public void performQuery() throws Exception {
+  public void performQuery(MusicFile mf) {
     // to be overridden
+    this.musicFile = mf;
+    init();
   }
 
   public String getName() {
@@ -50,6 +56,18 @@ public class Query {
   @Override
   public String toString() {
     return "[name=" + name + ", code=" + code + "]";
+  }
+
+  public Map<String, Map<String, Object>> getResults() {
+    return results;
+  }
+
+  public String getClassName() {
+    return className;
+  }
+
+  public void setClassName(String className) {
+    this.className = className;
   }
 
 }

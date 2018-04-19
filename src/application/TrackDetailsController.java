@@ -2,19 +2,31 @@ package application;
 
 import java.io.ByteArrayInputStream;
 import java.net.URL;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
 
+import application.query.Query;
 import application.query.QueryUtility;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableColumn.CellDataFeatures;
+import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.util.Callback;
 import model.MusicFile;
 
 public class TrackDetailsController implements Initializable {
@@ -33,6 +45,9 @@ public class TrackDetailsController implements Initializable {
 
   @FXML
   private MenuButton btnPerformQuery;
+
+  @FXML
+  private Label lblQueryResults;
 
   @FXML
   private Label lblPath;
@@ -64,9 +79,32 @@ public class TrackDetailsController implements Initializable {
   @FXML
   private ImageView imgAlbum;
 
+  @FXML
+  private ListView<String> listQueryResults;
+
+  @FXML
+  private TableView<Map.Entry<String, Object>> tblResults;
+
+  @FXML
+  private TableColumn<Map.Entry<String, Object>, String> resValueColumn;
+
+  @FXML
+  private TableColumn<Map.Entry<String, Object>, String> resAttributeColumn;
+
+  @FXML
+  private TableView<Map.Entry<String, Object>> tblOriginal;
+
+  @FXML
+  private TableColumn<Map.Entry<String, Object>, String> orgValueColumn;
+
+  @FXML
+  private TableColumn<Map.Entry<String, Object>, String> orgAttributeColumn;
+
   private Parent callerWindowRoot;
 
   private TrackDetailsParamBean paramBean;
+
+  private Map<String, Map<String, Object>> results;
 
   public TrackDetailsController(Parent callerWindowRoot, TrackDetailsParamBean parambean) {
     this.callerWindowRoot = callerWindowRoot;
@@ -77,20 +115,98 @@ public class TrackDetailsController implements Initializable {
   public void initialize(URL arg0, ResourceBundle arg1) {
     setTrackData();
     initQueryMethods();
-    
-    btnPerformQuery.setOnAction(e -> performQuery());
+    initTableColumns();
+    initTblOriginal();
+    initTblResults();
   }
 
-  private void performQuery() {
+  private void initTblOriginal() {
+    Map<String, Object> attibuteMap = paramBean.musicFile.getAttibuteMap();
+    tblOriginal.setItems(FXCollections.observableArrayList(attibuteMap.entrySet()));
+  }
+
+  private void initTblResults() {
+    listQueryResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshValuesInTable());
+  }
+
+  private void initTableColumns() {
+    Callback<TableColumn.CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>> mapKeyColumnFactory = createMapKeyColumnFactory();
+    Callback<TableColumn.CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>> mapValueColumnFactory = createMapValueColumnFactory();
+    resAttributeColumn.setCellValueFactory(mapKeyColumnFactory);
+    resValueColumn.setCellValueFactory(mapValueColumnFactory);
+    orgAttributeColumn.setCellValueFactory(mapKeyColumnFactory);
+    orgValueColumn.setCellValueFactory(mapValueColumnFactory);
+
+  }
+
+  private Callback<CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>> createMapValueColumnFactory() {
+    return new Callback<TableColumn.CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>>() {
+
+      @Override
+      public ObservableValue<String> call(CellDataFeatures<Entry<String, Object>, String> param) {
+        return new SimpleStringProperty(param.getValue().getValue().toString());
+      }
+    };
+  }
+
+  private Callback<CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>> createMapKeyColumnFactory() {
+    return new Callback<TableColumn.CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>>() {
+
+      @Override
+      public ObservableValue<String> call(CellDataFeatures<Entry<String, Object>, String> param) {
+        String key = param.getValue().getKey();
+        return new SimpleStringProperty(key.substring(0, 1).toUpperCase() + key.substring(1));
+      }
+    };
   }
 
   private void initQueryMethods() {
     QueryUtility queryUtility = QueryUtility.getInstance();
     queryUtility.getQueryMethods().forEach(q -> {
       MenuItem menuItem = new MenuItem(q.getName());
-      menuItem.setOnAction(e -> queryUtility.performQuery(paramBean.musicFile, q.getCode()));
       btnPerformQuery.getItems().add(menuItem);
+      menuItem.setOnAction(e -> {
+        Task<Void> queryTask = new Task<Void>() {
+
+          @Override
+          protected Void call() throws Exception {
+            performQuery(queryUtility, q);
+            return null;
+          }
+
+          @Override
+          protected void succeeded() {
+            listQueryResults.setItems(FXCollections.observableArrayList(results.keySet()));
+            if (!listQueryResults.getSelectionModel().isEmpty()) {
+              listQueryResults.getSelectionModel().select(0);
+            } else {
+              Label placeHolder = new Label("No results found for track!");
+              placeHolder.getStyleClass().add("placeHolder");
+              listQueryResults.setPlaceholder(placeHolder);
+            }
+            lblQueryResults.setText(q.getName() + " query results");
+          }
+        };
+
+        Thread thread = new Thread(queryTask);
+        thread.setDaemon(true);
+        thread.start();
+
+      });
     });
+  }
+
+  private void performQuery(QueryUtility queryUtility, Query q) {
+    results = queryUtility.performQuery(paramBean.musicFile, q);
+  }
+
+  private void refreshValuesInTable() {
+    String selectedId = listQueryResults.getSelectionModel().getSelectedItem();
+    if (selectedId != null) {
+      tblResults.setItems(FXCollections.observableArrayList(results.get(selectedId).entrySet()));
+    } else {
+      tblResults.setItems(null);
+    }
   }
 
   private void setTrackData() {

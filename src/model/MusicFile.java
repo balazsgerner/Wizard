@@ -1,6 +1,12 @@
 package model;
 
 import java.io.File;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jaudiotagger.audio.AudioFile;
@@ -97,6 +103,27 @@ public class MusicFile {
   @Override
   public String toString() {
     return "[artist: " + getBand() + ", album: " + getAlbum() + ", title: " + getTitle() + "]";
+  }
+
+  public Map<String, Object> getAttibuteMap() {
+    Map<String, Object> attributeMap = new HashMap<>();
+    List<Method> listOfMethods = Arrays.asList(getClass().getDeclaredMethods());
+    Stream<Method> listOfGetters = listOfMethods.stream().filter(p -> {
+      String name = p.getName();
+      return name.startsWith("get") && !(name.equals("getAttibuteMap") || name.equals("getArtwork"));
+    });
+
+    listOfGetters.forEach(g -> {
+      String attributeName = g.getName().split("get")[1].toLowerCase();
+      attributeName = attributeName.substring(0, 1).toUpperCase() + attributeName.substring(1);
+      try {
+        Object attributeValue = g.invoke(this);
+        attributeMap.put(attributeName, attributeValue);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    });
+    return attributeMap;
   }
 
 }

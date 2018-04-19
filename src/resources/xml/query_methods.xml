@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <querymethods>
 	<query>
+		<class>application.query.SpotifyQuery</class>
 		<code>SPOTIFY</code>
 		<name>Spotify</name>
 	</query>
 	<query>
+		<class></class>
 		<code>MUSICBRAINZ</code>
 		<name>Musicbrainz</name>
 	</query>
 	<query>
+		<class>application.query.AcoustidQuery</class>
 		<code>ACOUSTID</code>
 		<name>Acoustid</name>
 	</query>
