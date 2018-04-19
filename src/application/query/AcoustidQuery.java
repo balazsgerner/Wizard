@@ -57,7 +57,6 @@ public class AcoustidQuery extends Query {
         .queryString("client", prop.getProperty("acoustid_client_key")).queryString("duration", duration).queryString("fingerprint", fingerPrint)
         .queryString("meta", prop.getProperty("acoustid_meta")).asJson();
 
-    results = new HashMap<String, Map<String, Object>>();
     JSONObject jsonObject = new JSONObject(response.getBody().toString());
     JSONArray resultsArray = jsonObject.getJSONArray("results");
 

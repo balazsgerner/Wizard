@@ -1,5 +1,6 @@
 package application.query;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -35,6 +36,7 @@ public class Query {
     // to be overridden
     this.musicFile = mf;
     init();
+    results = new HashMap<String, Map<String, Object>>();
   }
 
   public String getName() {

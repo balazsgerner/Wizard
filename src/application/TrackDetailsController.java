@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import application.query.Query;
 import application.query.QueryUtility;
@@ -24,6 +25,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Callback;
@@ -106,6 +108,8 @@ public class TrackDetailsController implements Initializable {
 
   private Map<String, Map<String, Object>> results;
 
+  private Image originalImg;
+
   public TrackDetailsController(Parent callerWindowRoot, TrackDetailsParamBean parambean) {
     this.callerWindowRoot = callerWindowRoot;
     this.paramBean = parambean;
@@ -127,6 +131,20 @@ public class TrackDetailsController implements Initializable {
 
   private void initTblResults() {
     listQueryResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshValuesInTable());
+    tblResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshImageIfNeeded());
+  }
+
+  private void refreshImageIfNeeded() {
+    Entry<String, Object> selectedItem = tblResults.getSelectionModel().getSelectedItem();
+    if (selectedItem != null && selectedItem.getKey().contains("image")) {
+      if (originalImg == null) {
+        originalImg = imgAlbum.getImage();
+      }
+      String imgUrl = (String) selectedItem.getValue();
+      imgAlbum.setImage(new Image(imgUrl));
+    } else if (originalImg != null && !imgAlbum.getImage().equals(originalImg)) {
+      imgAlbum.setImage(originalImg);
+    }
   }
 
   private void initTableColumns() {
@@ -134,7 +152,9 @@ public class TrackDetailsController implements Initializable {
     Callback<TableColumn.CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>> mapValueColumnFactory = createMapValueColumnFactory();
     resAttributeColumn.setCellValueFactory(mapKeyColumnFactory);
     resValueColumn.setCellValueFactory(mapValueColumnFactory);
+    resValueColumn.setCellFactory(TextFieldTableCell.forTableColumn());
     orgAttributeColumn.setCellValueFactory(mapKeyColumnFactory);
+    orgValueColumn.setCellFactory(TextFieldTableCell.forTableColumn());
     orgValueColumn.setCellValueFactory(mapValueColumnFactory);
 
   }
@@ -176,8 +196,10 @@ public class TrackDetailsController implements Initializable {
 
           @Override
           protected void succeeded() {
-            listQueryResults.setItems(FXCollections.observableArrayList(results.keySet()));
-            if (!listQueryResults.getSelectionModel().isEmpty()) {
+            Set<String> keySet = results.keySet();
+            listQueryResults.setItems(FXCollections.observableArrayList(keySet));
+            boolean isempty = keySet.isEmpty();
+            if (!isempty) {
               listQueryResults.getSelectionModel().select(0);
             } else {
               Label placeHolder = new Label("No results found for track!");
@@ -204,6 +226,7 @@ public class TrackDetailsController implements Initializable {
     String selectedId = listQueryResults.getSelectionModel().getSelectedItem();
     if (selectedId != null) {
       tblResults.setItems(FXCollections.observableArrayList(results.get(selectedId).entrySet()));
+      tblResults.getSortOrder().add(resAttributeColumn);
     } else {
       tblResults.setItems(null);
     }

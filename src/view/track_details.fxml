@@ -224,7 +224,7 @@
                                     </GridPane>
                                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
                                        <children>
-                                          <TableView fx:id="tblResults" layoutX="175.0" layoutY="34.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                          <TableView fx:id="tblResults" editable="true" layoutX="175.0" layoutY="34.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                             <columns>
                                               <TableColumn fx:id="resAttributeColumn" prefWidth="75.0" text="Attribute" />
                                               <TableColumn fx:id="resValueColumn" prefWidth="75.0" text="Value" />

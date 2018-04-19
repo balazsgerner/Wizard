@@ -1,14 +1,22 @@
 package application.query;
 
+import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
+import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
+import com.wrapper.spotify.model_objects.specification.Image;
 import com.wrapper.spotify.model_objects.specification.Paging;
 import com.wrapper.spotify.model_objects.specification.Track;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 import com.wrapper.spotify.requests.data.search.simplified.SearchTracksRequest;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +36,8 @@ public class SpotifyQuery extends Query {
   private ClientCredentialsRequest clientCredentialsRequest;
 
   private Properties prop;
+
+  private int imgNum;
 
   @Override
   protected void init() {
@@ -62,18 +72,61 @@ public class SpotifyQuery extends Query {
       searchString += " + title:" + title;
     }
 
-    System.out.println(searchString);
-
     SearchTracksRequest trackRequest = spotifyApi.searchTracks(searchString).offset(OFFSET).limit(LIMIT).build();
     Paging<Track> paging;
     try {
       paging = trackRequest.execute();
       for (Track track : paging.getItems()) {
-        System.out.format("%-35s%-50s%-5s\n", "id: " + track.getId(), "name: " + track.getName(), "album: " + track.getAlbum().getName());
+        Map<String, Object> attributes = new HashMap<>();
+
+        ArtistSimplified[] artists = track.getArtists();
+        String artistsStr = getListOfArtists(artists);
+
+        attributes.put("artists", artistsStr);
+        attributes.put("album", track.getAlbum().getName());
+        ArtistSimplified[] albumArtists = track.getAlbum().getArtists();
+        String albumArtistsStr = getListOfArtists(albumArtists);
+        attributes.put("album artist", albumArtistsStr);
+
+        List<Image> images = Arrays.asList(track.getAlbum().getImages());
+        imgNum = 0;
+        images.forEach(e -> {
+          attributes.put("image #" + (imgNum++), e.getUrl());
+        });
+
+        attributes.put("album type", track.getAlbum().getType());
+        List<CountryCode> availableMarkets = Arrays.asList(track.getAvailableMarkets());
+        List<String> countryCodes = new ArrayList<>();
+        availableMarkets.forEach(a -> countryCodes.add(a.getAlpha2()));
+        String countryCodesStr = String.join(", ", countryCodes);
+
+        attributes.put("available markets", countryCodesStr);
+        attributes.put("disc number", track.getDiscNumber());
+
+        Integer durationMs = track.getDurationMs();
+        int drtn = durationMs / 1000;
+        String drtnStr = String.format("%02d:%02d", drtn / 60, drtn % 60);
+        attributes.put("duration", drtnStr);
+
+        attributes.put("explicit", track.getIsExplicit());
+        attributes.put("ISRC", track.getExternalIds().getExternalIds().get("isrc"));
+        String trackId = track.getId();
+        attributes.put("track id", trackId);
+        attributes.put("title", track.getName());
+        attributes.put("track number", track.getTrackNumber());
+        results.put(trackId, attributes);
       }
     } catch (SpotifyWebApiException | IOException e) {
       e.printStackTrace();
     }
+  }
+
+  private String getListOfArtists(ArtistSimplified[] artists) {
+    List<ArtistSimplified> artistsList = Arrays.asList(artists);
+    List<String> artistNames = new ArrayList<>();
+    artistsList.forEach(e -> artistNames.add(e.getName()));
+    String artistsStr = String.join(", ", artistNames);
+    return artistsStr;
   }
 
 }
