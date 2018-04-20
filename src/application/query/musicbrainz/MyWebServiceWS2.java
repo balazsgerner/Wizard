@@ -1,4 +1,4 @@
-package musicbrainz;
+package application.query.musicbrainz;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -8,13 +8,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.musicbrainz.webservice.DefaultWebServiceWs2;
 
 public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
-
-  private Log log = LogFactory.getLog(MyWebServiceWS2.class);
 
   private String host;
 
@@ -36,17 +32,6 @@ public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
     }
   }
 
-  /**
-   * Constructs a URL that can be used to query the web service. The url is made up of the protocol, host, port,
-   * version, type, path and parameters.
-   * 
-   * @param entity The entity (i.e. type, e.g. 'artist') the request is targeting
-   * @param id The id of the entity
-   * @param includeParams A list containing values for the 'inc' parameter (can be null)
-   * @param filterParams Additional parameters depending on the entity (can be null)
-   * 
-   * @return An URL as String
-   */
   @Override
   protected String makeURL(String entity, String id, List<String> includeParams, Map<String, String> filterParams) {
     StringBuilder url = new StringBuilder();
@@ -56,9 +41,9 @@ public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
       urlParams.putAll(filterParams);
     }
 
-    url.append(this.protocol).append("://").append(this.getHost());
-    if (this.port != null) {
-      url.append(":").append(this.port);
+    url.append(protocol).append("://").append(host);
+    if (port != null) {
+      url.append(":").append(port);
     }
     url.append(PATHPREFIX).append("/").append(WS_VERSION).append("/").append(entity).append("/").append(id);
 
@@ -72,36 +57,11 @@ public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
       url.append("&").append(e.getKey()).append("=").append(e.getValue());
     }
 
-    String urlString = url.toString();
-    MusicBrainzWSDemo.getInstance().getPw().println(urlString);
-    System.out.println(urlString);
-    return urlString;
+    return url.toString();
   }
 
   @Override
   public String getHost() {
     return host;
   }
-
-  @Override
-  public void setHost(String host) {
-    this.host = host;
-  }
-
-  public String getProtocol() {
-    return protocol;
-  }
-
-  public void setProtocol(String protocol) {
-    this.protocol = protocol;
-  }
-
-  public String getPort() {
-    return port;
-  }
-
-  public void setPort(String port) {
-    this.port = port;
-  }
-
 }

@@ -1,4 +1,4 @@
-package application.query;
+package application.query.acoustid;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
@@ -19,6 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import application.query.Query;
 import model.MusicFile;
 
 public class AcoustidQuery extends Query {

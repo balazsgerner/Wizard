@@ -56,6 +56,9 @@ public class MainWindowController implements Initializable {
   private TextField txtFilter;
 
   @FXML
+  private Button btnTrackDetails;
+
+  @FXML
   private ProgressIndicator scanProgressIndicator;
 
   private List<String> supportedExtensions = Arrays.asList("mp3", "m4a", "flac");
@@ -146,7 +149,17 @@ public class MainWindowController implements Initializable {
     musicDetails.getSortOrder().add(bandColumn);
 
     musicDetails.setOnMouseClicked(e -> openTrackDetailsView(e));
+    musicDetails.getSelectionModel().selectedItemProperty().addListener(e -> enableTrackDetailsButton());
     txtFilter.textProperty().addListener(e -> filterTableModel());
+  }
+
+  private void enableTrackDetailsButton() {
+    boolean empty = musicDetails.getSelectionModel().isEmpty();
+    if (empty) {
+      btnTrackDetails.setDisable(true);
+    } else if (btnTrackDetails.isDisabled()) {
+      btnTrackDetails.setDisable(false);
+    }
   }
 
   private void filterTableModel() {
@@ -177,20 +190,22 @@ public class MainWindowController implements Initializable {
     boolean selectionEmpty = selectionModel.getSelectedItem() == null;
     boolean doubleClick = e.getButton().equals(MouseButton.PRIMARY) && e.getClickCount() == 2;
     if (doubleClick && !selectionEmpty) {
-      try {
-        FXMLLoader trackDetailsLoader = new FXMLLoader(getClass().getResource("/view/track_details.fxml"));
+      loadTrackDetailView();
+    }
+  }
 
-        MusicFile selectedFile = selectionModel.getSelectedItem();
-
-        TrackDetailsParamBean paramBean = new TrackDetailsParamBean();
-        paramBean.musicFile = selectedFile;
-        trackDetailsLoader.setController(new TrackDetailsController(root, paramBean));
-        Parent trackDetailsRoot = trackDetailsLoader.load();
-        root.getScene().setRoot(trackDetailsRoot);
-
-      } catch (IOException e1) {
-        e1.printStackTrace();
-      }
+  @FXML
+  private void loadTrackDetailView() {
+    try {
+      FXMLLoader trackDetailsLoader = new FXMLLoader(getClass().getResource("/view/track_details.fxml"));
+      MusicFile selectedFile = musicDetails.getSelectionModel().getSelectedItem();
+      TrackDetailsParamBean paramBean = new TrackDetailsParamBean();
+      paramBean.musicFile = selectedFile;
+      trackDetailsLoader.setController(new TrackDetailsController(root, paramBean));
+      Parent trackDetailsRoot = trackDetailsLoader.load();
+      root.getScene().setRoot(trackDetailsRoot);
+    } catch (IOException e1) {
+      e1.printStackTrace();
     }
   }
 

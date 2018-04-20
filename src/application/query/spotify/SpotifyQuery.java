@@ -1,4 +1,4 @@
-package application.query;
+package application.query.spotify;
 
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
@@ -21,6 +21,7 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 
+import application.query.Query;
 import model.MusicFile;
 
 public class SpotifyQuery extends Query {

@@ -59,7 +59,11 @@
                            </font>
                         </Button>
                      </children>
+                     <padding>
+                        <Insets right="10.0" />
+                     </padding>
                   </HBox>
+                  <Button fx:id="btnTrackDetails" disable="true" mnemonicParsing="false" onAction="#loadTrackDetailView" text="Track details..." />
               </items>
                <BorderPane.margin>
                   <Insets />

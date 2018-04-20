@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+
 import application.query.Query;
 import application.query.QueryUtility;
 import javafx.beans.property.SimpleStringProperty;
@@ -164,7 +166,11 @@ public class TrackDetailsController implements Initializable {
 
       @Override
       public ObservableValue<String> call(CellDataFeatures<Entry<String, Object>, String> param) {
-        return new SimpleStringProperty(param.getValue().getValue().toString());
+        Object value = param.getValue().getValue();
+        if (value == null) {
+          return new SimpleStringProperty(StringUtils.EMPTY);
+        }
+        return new SimpleStringProperty(value.toString());
       }
     };
   }
