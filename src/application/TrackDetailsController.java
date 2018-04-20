@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import application.query.Query;
 import application.query.QueryUtility;
+import application.query.musicbrainz.MusicbrainzIsrcQuery;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
@@ -29,6 +30,7 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
@@ -48,7 +50,13 @@ public class TrackDetailsController implements Initializable {
   private Button btnAssignId;
 
   @FXML
-  private Button btnSelectId;
+  private Button btnDetailedSearch;
+
+  @FXML
+  private Button btnCombineSearch;
+
+  @FXML
+  private TextField txtIsrc;
 
   @FXML
   private MenuButton btnPerformQuery;
@@ -130,6 +138,31 @@ public class TrackDetailsController implements Initializable {
     initTableColumns();
     initTblOriginal();
     initTblResults();
+    initTxtIsrc();
+    initBtnDetailedSearch();
+  }
+
+  private void initBtnDetailedSearch() {
+    btnDetailedSearch.setOnAction(e -> {
+      Query detailedQuery = QueryUtility.getInstance().getQueryByCode(MusicbrainzIsrcQuery.CODE);
+      detailedQuery.setParam("isrc", txtIsrc.getText());
+      runQueryInBackground(detailedQuery);
+    });
+  }
+
+  private void initTxtIsrc() {
+    txtIsrc.textProperty().addListener(e -> disableButtonsIfEmpty());
+  }
+
+  private void disableButtonsIfEmpty() {
+    boolean enabled;
+    if (StringUtils.isEmpty(txtIsrc.getText())) {
+      enabled = false;
+    } else {
+      enabled = true;
+    }
+    btnCombineSearch.setDisable(!enabled);
+    btnDetailedSearch.setDisable(!enabled);
   }
 
   private void initTblOriginal() {
@@ -194,50 +227,63 @@ public class TrackDetailsController implements Initializable {
 
   private void initQueryMethods() {
     QueryUtility queryUtility = QueryUtility.getInstance();
-    queryUtility.getQueryMethods().forEach(q -> {
-      MenuItem menuItem = new MenuItem(q.getName());
+    queryUtility.getQueryMethods().stream().filter(q -> !q.isParametrized()).forEach(query -> {
+      MenuItem menuItem = new MenuItem(query.getName());
       btnPerformQuery.getItems().add(menuItem);
-      menuItem.setOnAction(createQueryBackgroundTask(queryUtility, q));
+      menuItem.setOnAction(createQueryBackgroundTask(query));
     });
   }
 
-  private EventHandler<ActionEvent> createQueryBackgroundTask(QueryUtility queryUtility, Query q) {
+  private EventHandler<ActionEvent> createQueryBackgroundTask(Query query) {
     return e -> {
-      progressQuery.setVisible(true);
-      Platform.runLater(new Runnable() {
-
-        @Override
-        public void run() {
-          performQuery(queryUtility, q);
-          progressQuery.setVisible(false);
-
-          Set<String> keySet = results.keySet();
-          listQueryResults.setItems(FXCollections.observableArrayList(keySet));
-          boolean isempty = keySet.isEmpty(); 
-          if (!isempty) {
-            listQueryResults.getSelectionModel().select(0);
-          } else {
-            Label placeHolder = new Label("No results found for track!");
-            placeHolder.getStyleClass().add("placeHolder");
-            listQueryResults.setPlaceholder(placeHolder);
-          }
-          lblQueryResults.setText(q.getName() + " query results");
-
-        }
-      });
+      runQueryInBackground(query);
     };
   }
 
-  private void performQuery(QueryUtility queryUtility, Query q) {
-    results = queryUtility.performQuery(paramBean.musicFile, q);
+  private void runQueryInBackground(Query query) {
+    Platform.runLater(new Runnable() {
+
+      @Override
+      public void run() {
+        performQuery(query);
+        progressQuery.setVisible(false);
+
+        Set<String> keySet = results.keySet();
+        listQueryResults.setItems(FXCollections.observableArrayList(keySet));
+        boolean isempty = keySet.isEmpty();
+        if (!isempty) {
+          listQueryResults.getSelectionModel().select(0);
+        } else {
+          Label placeHolder = new Label("No results found for track!");
+          placeHolder.getStyleClass().add("placeHolder");
+          listQueryResults.setPlaceholder(placeHolder);
+        }
+        lblQueryResults.setText(query.getName() + " query results");
+
+      }
+    });
+  }
+
+  private void performQuery(Query query) {
+    results = QueryUtility.getInstance().performQuery(paramBean.musicFile, query);
   }
 
   private void refreshValuesInTable() {
     String selectedId = listQueryResults.getSelectionModel().getSelectedItem();
     if (selectedId != null) {
-      tblResults.setItems(FXCollections.observableArrayList(results.get(selectedId).entrySet()));
+      btnAssignId.setDisable(false);
+      Map<String, Object> attributeMap = results.get(selectedId);
+      if (attributeMap.containsKey("isrc")) {
+        String isrc = (String) attributeMap.get("isrc");
+        txtIsrc.setText(isrc);
+      } else {
+        txtIsrc.setText(StringUtils.EMPTY);
+      }
+      tblResults.setItems(FXCollections.observableArrayList(attributeMap.entrySet()));
       tblResults.getSortOrder().add(resAttributeColumn);
     } else {
+      txtIsrc.setText(StringUtils.EMPTY);
+      btnAssignId.setDisable(true);
       tblResults.setItems(null);
     }
   }

@@ -34,32 +34,11 @@ public class MusicbrainzQuery extends Query {
   @Override
   public void performQuery(MusicFile mf) {
     super.performQuery(mf);
+    String searchStr = createSearchStr();
+    fillAttributeMap(searchStr);
+  }
 
-    String title = formatStr(mf.getTitle());
-    String artist = formatStr(mf.getBand());
-    String searchStr = "";
-    boolean artistEmpty = StringUtils.isEmpty(artist);
-    String artistStr = null;
-    if (!artistEmpty) {
-      artistStr = "artist:" + artist;
-    }
-
-    boolean titleEmpty = StringUtils.isEmpty(title);
-    String titleStr = null;
-    if (!titleEmpty) {
-      titleStr = "recording:" + title;
-    }
-
-    if (!artistEmpty && !titleEmpty) {
-      searchStr = String.join("+and+", artistStr, titleStr);
-    } else if (artistEmpty) {
-      searchStr = titleStr;
-    } else if (titleEmpty) {
-      searchStr = artistStr;
-    } else {
-      throw new IllegalArgumentException("Search string cannot be null!");
-    }
-
+  protected void fillAttributeMap(String searchStr) {
     recording.search(searchStr);
     List<RecordingResultWs2> resultList = recording.getFirstSearchResultPage();
     Iterator<RecordingResultWs2> iterResults = resultList.iterator();
@@ -91,6 +70,34 @@ public class MusicbrainzQuery extends Query {
 
       results.put(recordingId, attributes);
     }
+  }
+
+  protected String createSearchStr() {
+    String title = formatStr(musicFile.getTitle());
+    String artist = formatStr(musicFile.getBand());
+    String searchStr = "";
+    boolean artistEmpty = StringUtils.isEmpty(artist);
+    String artistStr = null;
+    if (!artistEmpty) {
+      artistStr = "artist:" + artist;
+    }
+
+    boolean titleEmpty = StringUtils.isEmpty(title);
+    String titleStr = null;
+    if (!titleEmpty) {
+      titleStr = "recording:" + title;
+    }
+
+    if (!artistEmpty && !titleEmpty) {
+      searchStr = String.join("+and+", artistStr, titleStr);
+    } else if (artistEmpty) {
+      searchStr = titleStr;
+    } else if (titleEmpty) {
+      searchStr = artistStr;
+    } else {
+      throw new IllegalArgumentException("Search string cannot be null!");
+    }
+    return searchStr;
   }
 
   private String formatStr(String rawStr) {

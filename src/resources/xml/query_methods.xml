@@ -4,15 +4,24 @@
 		<class>application.query.spotify.SpotifyQuery</class>
 		<code>SPOTIFY</code>
 		<name>Spotify</name>
+		<parameterized>false</parameterized>
 	</query>
 	<query>
 		<class>application.query.musicbrainz.MusicbrainzQuery</class>
 		<code>MUSICBRAINZ</code>
 		<name>Musicbrainz</name>
+		<parameterized>false</parameterized>
+	</query>
+	<query>
+		<class>application.query.musicbrainz.MusicbrainzIsrcQuery</class>
+		<code>MUSICBRAINZISRC</code>
+		<name>Musicbrainz ISRC query</name>
+		<parameterized>true</parameterized>
 	</query>
 	<query>
 		<class>application.query.acoustid.AcoustidQuery</class>
 		<code>ACOUSTID</code>
 		<name>Acoustid</name>
+		<parameterized>false</parameterized>
 	</query>
 </querymethods>

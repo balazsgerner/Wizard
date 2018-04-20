@@ -15,9 +15,14 @@ import model.MusicFile;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Query {
 
+  @XmlElement
   protected String name;
 
+  @XmlElement
   protected String code;
+
+  @XmlElement
+  protected boolean parameterized;
 
   @XmlElement(name = "class")
   protected String className;
@@ -27,6 +32,18 @@ public class Query {
 
   @XmlTransient
   protected MusicFile musicFile;
+
+  @XmlTransient
+  protected Map<String, Object> params;
+
+  public Query() {
+    params = new HashMap<>();
+  }
+
+  public Query(String name, String code) {
+    this.name = name;
+    this.code = code;
+  }
 
   protected void init() {
     // to be overridden
@@ -55,6 +72,10 @@ public class Query {
     this.code = code;
   }
 
+  public void setParam(String paramName, Object paramValue) {
+    params.put(paramName, paramValue);
+  }
+
   @Override
   public String toString() {
     return "[name=" + name + ", code=" + code + "]";
@@ -70,6 +91,24 @@ public class Query {
 
   public void setClassName(String className) {
     this.className = className;
+  }
+
+  public Map<String, Object> getParams() {
+    return params;
+  }
+
+  public void setParams(Map<String, Object> params) {
+    this.params = params;
+  }
+
+  
+  public boolean isParametrized() {
+    return parameterized;
+  }
+
+  
+  public void setParametrized(boolean parameterized) {
+    this.parameterized = parameterized;
   }
 
 }

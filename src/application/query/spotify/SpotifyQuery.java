@@ -111,7 +111,7 @@ public class SpotifyQuery extends Query {
         attributes.put("duration", drtnStr);
 
         attributes.put("explicit", track.getIsExplicit());
-        attributes.put("ISRC", track.getExternalIds().getExternalIds().get("isrc"));
+        attributes.put("isrc", track.getExternalIds().getExternalIds().get("isrc"));
         String trackId = track.getId();
         attributes.put("track id", trackId);
         attributes.put("title", track.getName());

@@ -11,12 +11,14 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
@@ -34,9 +36,13 @@
           <RowConstraints vgrow="ALWAYS" />
         </rowConstraints>
          <children>
-            <GridPane style="-fx-border-style: solid; -fx-border-width: 0 0 1px 0;" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
+            <GridPane hgap="5.0" style="-fx-border-style: solid; -fx-border-width: 0 0 1px 0;" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
               <columnConstraints>
                 <ColumnConstraints hgrow="ALWAYS" minWidth="50.0" />
+                  <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
+                  <ColumnConstraints hgrow="NEVER" />
+                  <ColumnConstraints halignment="LEFT" hgrow="NEVER" minWidth="10.0" />
+                  <ColumnConstraints hgrow="NEVER" maxWidth="10.0" minWidth="10.0" prefWidth="10.0" />
                 <ColumnConstraints halignment="RIGHT" hgrow="NEVER" />
               </columnConstraints>
               <rowConstraints>
@@ -63,13 +69,13 @@
                         <Font size="20.0" />
                      </font>
                   </Label>
-                  <Separator prefHeight="1.0" style="-fx-background-color: black; -fx-border-style: none;" GridPane.columnSpan="2" GridPane.rowIndex="4" />
+                  <Separator prefHeight="1.0" style="-fx-background-color: black; -fx-border-style: none;" GridPane.columnSpan="6" GridPane.rowIndex="4" />
                   <Label fx:id="lblYear" text="Year" GridPane.rowIndex="5">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </Label>
-                  <Label fx:id="lblPath" text="Path" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                  <Label fx:id="lblPath" text="Path" GridPane.columnIndex="1" GridPane.columnSpan="5" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
                      <GridPane.margin>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                      </GridPane.margin>
@@ -77,7 +83,15 @@
                         <Font size="14.0" />
                      </font>
                   </Label>
-                  <MenuButton fx:id="btnPerformQuery" mnemonicParsing="false" prefHeight="35.0" text="Perform query..." GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                  <MenuButton fx:id="btnPerformQuery" mnemonicParsing="false" prefHeight="35.0" text="Perform query..." GridPane.columnIndex="5" GridPane.rowIndex="3" />
+                  <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="2" GridPane.valignment="BOTTOM">
+                     <children>
+                        <Label alignment="BOTTOM_LEFT" text="ISRC" />
+                        <TextField fx:id="txtIsrc" alignment="BOTTOM_LEFT" disable="true" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+                  <Button fx:id="btnDetailedSearch" disable="true" mnemonicParsing="false" prefHeight="35.0" text="Detailed search..." GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                  <Button fx:id="btnCombineSearch" disable="true" mnemonicParsing="false" prefHeight="35.0" text="Combine search..." GridPane.columnIndex="3" GridPane.rowIndex="3" />
                </children>
                <GridPane.margin>
                   <Insets />
@@ -217,8 +231,7 @@
                                           </ListView>
                                           <VBox spacing="5.0" GridPane.columnIndex="1">
                                              <children>
-                                                <Button fx:id="btnSelectId" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="Select" />
-                                                <Button fx:id="btnAssignId" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="Assign Id to track" />
+                                                <Button fx:id="btnAssignId" disable="true" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="Assign Id to track" />
                                              </children>
                                           </VBox>
                                        </children>
