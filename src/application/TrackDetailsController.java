@@ -11,10 +11,12 @@ import org.apache.commons.lang3.StringUtils;
 
 import application.query.Query;
 import application.query.QueryUtility;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
@@ -23,6 +25,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
@@ -82,6 +85,9 @@ public class TrackDetailsController implements Initializable {
 
   @FXML
   private ImageView imgAlbum;
+
+  @FXML
+  private ProgressIndicator progressQuery;
 
   @FXML
   private ListView<String> listQueryResults;
@@ -191,37 +197,35 @@ public class TrackDetailsController implements Initializable {
     queryUtility.getQueryMethods().forEach(q -> {
       MenuItem menuItem = new MenuItem(q.getName());
       btnPerformQuery.getItems().add(menuItem);
-      menuItem.setOnAction(e -> {
-        Task<Void> queryTask = new Task<Void>() {
-
-          @Override
-          protected Void call() throws Exception {
-            performQuery(queryUtility, q);
-            return null;
-          }
-
-          @Override
-          protected void succeeded() {
-            Set<String> keySet = results.keySet();
-            listQueryResults.setItems(FXCollections.observableArrayList(keySet));
-            boolean isempty = keySet.isEmpty();
-            if (!isempty) {
-              listQueryResults.getSelectionModel().select(0);
-            } else {
-              Label placeHolder = new Label("No results found for track!");
-              placeHolder.getStyleClass().add("placeHolder");
-              listQueryResults.setPlaceholder(placeHolder);
-            }
-            lblQueryResults.setText(q.getName() + " query results");
-          }
-        };
-
-        Thread thread = new Thread(queryTask);
-        thread.setDaemon(true);
-        thread.start();
-
-      });
+      menuItem.setOnAction(createQueryBackgroundTask(queryUtility, q));
     });
+  }
+
+  private EventHandler<ActionEvent> createQueryBackgroundTask(QueryUtility queryUtility, Query q) {
+    return e -> {
+      progressQuery.setVisible(true);
+      Platform.runLater(new Runnable() {
+
+        @Override
+        public void run() {
+          performQuery(queryUtility, q);
+          progressQuery.setVisible(false);
+
+          Set<String> keySet = results.keySet();
+          listQueryResults.setItems(FXCollections.observableArrayList(keySet));
+          boolean isempty = keySet.isEmpty(); 
+          if (!isempty) {
+            listQueryResults.getSelectionModel().select(0);
+          } else {
+            Label placeHolder = new Label("No results found for track!");
+            placeHolder.getStyleClass().add("placeHolder");
+            listQueryResults.setPlaceholder(placeHolder);
+          }
+          lblQueryResults.setText(q.getName() + " query results");
+
+        }
+      });
+    };
   }
 
   private void performQuery(QueryUtility queryUtility, Query q) {

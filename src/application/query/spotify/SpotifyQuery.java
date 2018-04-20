@@ -21,6 +21,7 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 
+import application.Main;
 import application.query.Query;
 import model.MusicFile;
 
@@ -44,7 +45,7 @@ public class SpotifyQuery extends Query {
   protected void init() {
     prop = new Properties();
     try {
-      prop.load(getClass().getResourceAsStream("/resources/properties/spotify.properties"));
+      prop.load(Main.class.getResourceAsStream("/resources/properties/spotify.properties"));
 
       String clientId = prop.getProperty("client_id");
       String clientSecret = prop.getProperty("client_secret");

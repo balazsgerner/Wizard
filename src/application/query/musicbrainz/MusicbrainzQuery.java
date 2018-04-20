@@ -60,7 +60,6 @@ public class MusicbrainzQuery extends Query {
       throw new IllegalArgumentException("Search string cannot be null!");
     }
 
-    System.out.println(searchStr);
     recording.search(searchStr);
     List<RecordingResultWs2> resultList = recording.getFirstSearchResultPage();
     Iterator<RecordingResultWs2> iterResults = resultList.iterator();

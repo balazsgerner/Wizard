@@ -76,6 +76,8 @@ public class MainWindowController implements Initializable {
       model.clear();
       trackNumber.setText("");
       scanProgressIndicator.setVisible(true);
+      txtFilter.setText("");
+      txtFilter.setDisable(true);
 
       Task<Void> scanTask = new Task<Void>() {
 
@@ -88,6 +90,7 @@ public class MainWindowController implements Initializable {
         @Override
         protected void succeeded() {
           scanProgressIndicator.setVisible(false);
+          txtFilter.setDisable(false);
           trackNumber.setText(model.size() + " tracks found");
         }
       };

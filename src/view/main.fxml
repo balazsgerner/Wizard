@@ -12,7 +12,6 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
 <BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.MainWindowController">
@@ -76,14 +75,10 @@
       </BorderPane>
    </center>
    <bottom>
-      <ToolBar nodeOrientation="RIGHT_TO_LEFT" prefHeight="15.0" BorderPane.alignment="CENTER_RIGHT">
+      <ToolBar nodeOrientation="RIGHT_TO_LEFT" prefHeight="40.0" BorderPane.alignment="CENTER_RIGHT">
          <items>
-            <StackPane>
-               <children>
-                  <ProgressIndicator fx:id="scanProgressIndicator" prefHeight="15.0" prefWidth="25.0" visible="false" />
-                  <Label fx:id="trackNumber" prefHeight="15.0" />
-               </children>
-            </StackPane>
+            <ProgressIndicator fx:id="scanProgressIndicator" prefHeight="15.0" prefWidth="25.0" visible="false" />
+            <Label fx:id="trackNumber" prefHeight="15.0" />
          </items>
       </ToolBar>
    </bottom>

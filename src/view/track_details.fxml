@@ -6,6 +6,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -267,4 +268,11 @@
         </items>
       </ToolBar>
    </top>
+   <bottom>
+      <ToolBar nodeOrientation="RIGHT_TO_LEFT" prefHeight="40.0" BorderPane.alignment="CENTER">
+        <items>
+            <ProgressIndicator fx:id="progressQuery" prefHeight="15.0" prefWidth="25.0" visible="false" />
+        </items>
+      </ToolBar>
+   </bottom>
 </BorderPane>
