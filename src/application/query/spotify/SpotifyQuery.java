@@ -23,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import application.Main;
 import application.query.Query;
-import model.MusicFile;
 
 public class SpotifyQuery extends Query {
 
@@ -60,24 +59,10 @@ public class SpotifyQuery extends Query {
   }
 
   @Override
-  public void performQuery(MusicFile mf) {
-    super.performQuery(mf);
-
-    String band = musicFile.getBand();
-    String title = musicFile.getTitle();
-    String searchString = "";
-    if (!StringUtils.isEmpty(band)) {
-      searchString += "artist:" + band;
-    }
-
-    if (!StringUtils.isEmpty(title)) {
-      searchString += " + title:" + title;
-    }
-
+  protected void fillResultsMap(String searchString) {
     SearchTracksRequest trackRequest = spotifyApi.searchTracks(searchString).offset(OFFSET).limit(LIMIT).build();
-    Paging<Track> paging;
     try {
-      paging = trackRequest.execute();
+      Paging<Track> paging = trackRequest.execute();
       for (Track track : paging.getItems()) {
         Map<String, Object> attributes = new HashMap<>();
 
@@ -121,6 +106,23 @@ public class SpotifyQuery extends Query {
     } catch (SpotifyWebApiException | IOException e) {
       e.printStackTrace();
     }
+
+  }
+
+  @Override
+  protected String createSearchStr() {
+    String band = musicFile.getBand();
+    String title = musicFile.getTitle();
+    String searchString = "";
+
+    if (!StringUtils.isEmpty(band)) {
+      searchString += "artist:" + band;
+    }
+
+    if (!StringUtils.isEmpty(title)) {
+      searchString += " + title:" + title;
+    }
+    return searchString;
   }
 
   private String getListOfArtists(ArtistSimplified[] artists) {

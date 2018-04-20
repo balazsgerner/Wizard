@@ -40,20 +40,25 @@ public class Query {
     params = new HashMap<>();
   }
 
-  public Query(String name, String code) {
-    this.name = name;
-    this.code = code;
-  }
-
   protected void init() {
     // to be overridden
   }
 
   public void performQuery(MusicFile mf) {
-    // to be overridden
     this.musicFile = mf;
+    this.results = new HashMap<String, Map<String, Object>>();
     init();
-    results = new HashMap<String, Map<String, Object>>();
+    String searchString = createSearchStr();
+    fillResultsMap(searchString);
+  }
+
+  protected String createSearchStr() {
+    // to be overridden
+    return null;
+  }
+
+  protected void fillResultsMap(String searchString) {
+    // to be overridden
   }
 
   public String getName() {
@@ -101,12 +106,10 @@ public class Query {
     this.params = params;
   }
 
-  
   public boolean isParametrized() {
     return parameterized;
   }
 
-  
   public void setParametrized(boolean parameterized) {
     this.parameterized = parameterized;
   }

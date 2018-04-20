@@ -7,6 +7,12 @@
 		<parameterized>false</parameterized>
 	</query>
 	<query>
+		<class>application.query.spotify.SpotifyIsrcQuery</class>
+		<code>SPOTIFYISRC</code>
+		<name>Spotify ISRC</name>
+		<parameterized>true</parameterized>
+	</query>
+	<query>
 		<class>application.query.musicbrainz.MusicbrainzQuery</class>
 		<code>MUSICBRAINZ</code>
 		<name>Musicbrainz</name>
@@ -15,7 +21,7 @@
 	<query>
 		<class>application.query.musicbrainz.MusicbrainzIsrcQuery</class>
 		<code>MUSICBRAINZISRC</code>
-		<name>Musicbrainz ISRC query</name>
+		<name>Musicbrainz ISRC</name>
 		<parameterized>true</parameterized>
 	</query>
 	<query>

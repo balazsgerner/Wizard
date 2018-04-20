@@ -14,7 +14,6 @@ import org.musicbrainz.model.entity.ReleaseWs2;
 import org.musicbrainz.model.searchresult.RecordingResultWs2;
 
 import application.query.Query;
-import model.MusicFile;
 
 public class MusicbrainzQuery extends Query {
 
@@ -32,13 +31,7 @@ public class MusicbrainzQuery extends Query {
   }
 
   @Override
-  public void performQuery(MusicFile mf) {
-    super.performQuery(mf);
-    String searchStr = createSearchStr();
-    fillAttributeMap(searchStr);
-  }
-
-  protected void fillAttributeMap(String searchStr) {
+  protected void fillResultsMap(String searchStr) {
     recording.search(searchStr);
     List<RecordingResultWs2> resultList = recording.getFirstSearchResultPage();
     Iterator<RecordingResultWs2> iterResults = resultList.iterator();
@@ -72,6 +65,7 @@ public class MusicbrainzQuery extends Query {
     }
   }
 
+  @Override
   protected String createSearchStr() {
     String title = formatStr(musicFile.getTitle());
     String artist = formatStr(musicFile.getBand());

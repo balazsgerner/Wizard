@@ -38,9 +38,9 @@
          <children>
             <GridPane hgap="5.0" style="-fx-border-style: solid; -fx-border-width: 0 0 1px 0;" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
               <columnConstraints>
-                <ColumnConstraints hgrow="ALWAYS" minWidth="50.0" />
-                  <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
-                  <ColumnConstraints hgrow="NEVER" />
+                <ColumnConstraints hgrow="ALWAYS" />
+                  <ColumnConstraints hgrow="ALWAYS" minWidth="49.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" />
                   <ColumnConstraints halignment="LEFT" hgrow="NEVER" minWidth="10.0" />
                   <ColumnConstraints hgrow="NEVER" maxWidth="10.0" minWidth="10.0" prefWidth="10.0" />
                 <ColumnConstraints halignment="RIGHT" hgrow="NEVER" />
@@ -84,14 +84,13 @@
                      </font>
                   </Label>
                   <MenuButton fx:id="btnPerformQuery" mnemonicParsing="false" prefHeight="35.0" text="Perform query..." GridPane.columnIndex="5" GridPane.rowIndex="3" />
-                  <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="2" GridPane.valignment="BOTTOM">
+                  <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="3" GridPane.valignment="BOTTOM">
                      <children>
                         <Label alignment="BOTTOM_LEFT" text="ISRC" />
                         <TextField fx:id="txtIsrc" alignment="BOTTOM_LEFT" disable="true" HBox.hgrow="ALWAYS" />
+                        <MenuButton fx:id="btnLookukIsrc" disable="true" mnemonicParsing="false" text="Lookup ISRC..." />
                      </children>
                   </HBox>
-                  <Button fx:id="btnDetailedSearch" disable="true" mnemonicParsing="false" prefHeight="35.0" text="Detailed search..." GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                  <Button fx:id="btnCombineSearch" disable="true" mnemonicParsing="false" prefHeight="35.0" text="Combine search..." GridPane.columnIndex="3" GridPane.rowIndex="3" />
                </children>
                <GridPane.margin>
                   <Insets />
@@ -253,14 +252,20 @@
                               </SplitPane>
                            </children>
                         </GridPane>
-                        <Label fx:id="lblQueryResults" layoutX="10.0" layoutY="10.0" text="Query results">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                           <padding>
-                              <Insets left="5.0" />
-                           </padding>
-                        </Label>
+                        <HBox layoutX="10.0" layoutY="10.0">
+                           <children>
+                              <Label fx:id="lblQueryName">
+                                 <font>
+                                    <Font name="System Bold" size="16.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="lblQueryResults" text="Query results">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </HBox>
                      </children>
                   </AnchorPane>
               </items>

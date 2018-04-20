@@ -40,7 +40,7 @@
    <center>
       <BorderPane>
          <center>
-            <TableView fx:id="musicDetails" focusTraversable="false" prefHeight="373.0" prefWidth="417.0" tableMenuButtonVisible="true">
+            <TableView fx:id="musicDetails" prefHeight="373.0" prefWidth="417.0" tableMenuButtonVisible="true">
                <columnResizePolicy>
                   <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                </columnResizePolicy>
@@ -62,7 +62,7 @@
                         <Insets right="10.0" />
                      </padding>
                   </HBox>
-                  <Button fx:id="btnTrackDetails" disable="true" mnemonicParsing="false" onAction="#loadTrackDetailView" text="Track details..." />
+                  <Button fx:id="btnTrackDetails" disable="true" mnemonicParsing="false" text="Track details..." />
               </items>
                <BorderPane.margin>
                   <Insets />

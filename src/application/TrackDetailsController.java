@@ -2,6 +2,7 @@ package application;
 
 import java.io.ByteArrayInputStream;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
@@ -11,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import application.query.Query;
 import application.query.QueryUtility;
-import application.query.musicbrainz.MusicbrainzIsrcQuery;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
@@ -50,10 +50,7 @@ public class TrackDetailsController implements Initializable {
   private Button btnAssignId;
 
   @FXML
-  private Button btnDetailedSearch;
-
-  @FXML
-  private Button btnCombineSearch;
+  private MenuButton btnLookukIsrc;
 
   @FXML
   private TextField txtIsrc;
@@ -63,6 +60,9 @@ public class TrackDetailsController implements Initializable {
 
   @FXML
   private Label lblQueryResults;
+
+  @FXML
+  private Label lblQueryName;
 
   @FXML
   private Label lblPath;
@@ -139,15 +139,6 @@ public class TrackDetailsController implements Initializable {
     initTblOriginal();
     initTblResults();
     initTxtIsrc();
-    initBtnDetailedSearch();
-  }
-
-  private void initBtnDetailedSearch() {
-    btnDetailedSearch.setOnAction(e -> {
-      Query detailedQuery = QueryUtility.getInstance().getQueryByCode(MusicbrainzIsrcQuery.CODE);
-      detailedQuery.setParam("isrc", txtIsrc.getText());
-      runQueryInBackground(detailedQuery);
-    });
   }
 
   private void initTxtIsrc() {
@@ -161,8 +152,7 @@ public class TrackDetailsController implements Initializable {
     } else {
       enabled = true;
     }
-    btnCombineSearch.setDisable(!enabled);
-    btnDetailedSearch.setDisable(!enabled);
+    btnLookukIsrc.setDisable(!enabled);
   }
 
   private void initTblOriginal() {
@@ -227,11 +217,20 @@ public class TrackDetailsController implements Initializable {
 
   private void initQueryMethods() {
     QueryUtility queryUtility = QueryUtility.getInstance();
-    queryUtility.getQueryMethods().stream().filter(q -> !q.isParametrized()).forEach(query -> {
-      MenuItem menuItem = new MenuItem(query.getName());
-      btnPerformQuery.getItems().add(menuItem);
-      menuItem.setOnAction(createQueryBackgroundTask(query));
+    List<Query> queryMethods = queryUtility.getQueryMethods();
+    queryMethods.stream().filter(q -> !q.isParametrized()).forEach(query -> {
+      createMenuItemFromQuery(btnPerformQuery, query);
     });
+
+    queryMethods.stream().filter(q -> q.isParametrized()).forEach(query -> {
+      createMenuItemFromQuery(btnLookukIsrc, query);
+    });
+  }
+
+  private void createMenuItemFromQuery(MenuButton button, Query query) {
+    MenuItem menuItem = new MenuItem(query.getName());
+    button.getItems().add(menuItem);
+    menuItem.setOnAction(createQueryBackgroundTask(query));
   }
 
   private EventHandler<ActionEvent> createQueryBackgroundTask(Query query) {
@@ -258,13 +257,17 @@ public class TrackDetailsController implements Initializable {
           placeHolder.getStyleClass().add("placeHolder");
           listQueryResults.setPlaceholder(placeHolder);
         }
-        lblQueryResults.setText(query.getName() + " query results");
+        lblQueryName.setText(query.getName()+" ");
+        lblQueryResults.setText(lblQueryResults.getText().toLowerCase());
 
       }
     });
   }
 
   private void performQuery(Query query) {
+    if (query.isParametrized()) {
+      query.setParam("isrc", txtIsrc.getText());
+    }
     results = QueryUtility.getInstance().performQuery(paramBean.musicFile, query);
   }
 

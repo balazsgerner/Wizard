@@ -24,15 +24,14 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
+import javafx.util.Callback;
 import model.MusicFile;
 
 public class MainWindowController implements Initializable {
@@ -149,11 +148,26 @@ public class MainWindowController implements Initializable {
     extensionColumn.setVisible(false);
     pathColumn.setVisible(false);
     musicDetails.getColumns().addAll(extensionColumn, pathColumn, bandColumn, titleColumn, albumColumn, yearColumn, genreColumn);
-    musicDetails.getSortOrder().add(bandColumn);
+    musicDetails.getColumns().forEach(c -> c.setSortable(true));
 
-    musicDetails.setOnMouseClicked(e -> openTrackDetailsView(e));
+    btnTrackDetails.setOnAction(e -> loadTrackDetailView(musicDetails.getSelectionModel().getSelectedItem()));
+    musicDetails.setRowFactory(createRowFactory());
+
     musicDetails.getSelectionModel().selectedItemProperty().addListener(e -> enableTrackDetailsButton());
     txtFilter.textProperty().addListener(e -> filterTableModel());
+  }
+
+  private Callback<TableView<MusicFile>, TableRow<MusicFile>> createRowFactory() {
+    return tv -> {
+      TableRow<MusicFile> row = new TableRow<>();
+      row.setOnMouseClicked(event -> {
+        if (event.getClickCount() == 2 && (!row.isEmpty())) {
+          MusicFile selectedFile = row.getItem();
+          loadTrackDetailView(selectedFile);
+        }
+      });
+      return row;
+    };
   }
 
   private void enableTrackDetailsButton() {
@@ -188,20 +202,9 @@ public class MainWindowController implements Initializable {
     });
   }
 
-  private void openTrackDetailsView(MouseEvent e) {
-    TableViewSelectionModel<MusicFile> selectionModel = musicDetails.getSelectionModel();
-    boolean selectionEmpty = selectionModel.getSelectedItem() == null;
-    boolean doubleClick = e.getButton().equals(MouseButton.PRIMARY) && e.getClickCount() == 2;
-    if (doubleClick && !selectionEmpty) {
-      loadTrackDetailView();
-    }
-  }
-
-  @FXML
-  private void loadTrackDetailView() {
+  private void loadTrackDetailView(MusicFile selectedFile) {
     try {
       FXMLLoader trackDetailsLoader = new FXMLLoader(getClass().getResource("/view/track_details.fxml"));
-      MusicFile selectedFile = musicDetails.getSelectionModel().getSelectedItem();
       TrackDetailsParamBean paramBean = new TrackDetailsParamBean();
       paramBean.musicFile = selectedFile;
       trackDetailsLoader.setController(new TrackDetailsController(root, paramBean));
