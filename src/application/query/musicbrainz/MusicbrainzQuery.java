@@ -23,6 +23,10 @@ public class MusicbrainzQuery extends Query {
 
   private Recording recording;
 
+  public MusicbrainzQuery(Query query) {
+    super(query);
+  }
+
   @Override
   protected void init() {
     recording = new Recording();
@@ -65,6 +69,20 @@ public class MusicbrainzQuery extends Query {
     }
   }
 
+  protected String formatStr(String rawStr) {
+    if (StringUtils.isEmpty(rawStr)) {
+      return StringUtils.EMPTY;
+    }
+    String result = rawStr;
+    result = StringUtils.replace(result, "!", "");
+    result = StringUtils.replace(result, "/", " ");
+    result = StringUtils.replace(result, " ", "+");
+    result = StringUtils.replace(result, "&", "and");
+    result = StringUtils.replace(result, "[", "(");
+    result = StringUtils.replace(result, "]", ")");
+    return result;
+  }
+  
   @Override
   protected String createSearchStr() {
     String title = formatStr(musicFile.getTitle());
@@ -92,17 +110,6 @@ public class MusicbrainzQuery extends Query {
       throw new IllegalArgumentException("Search string cannot be null!");
     }
     return searchStr;
-  }
-
-  private String formatStr(String rawStr) {
-    if (StringUtils.isEmpty(rawStr)) {
-      return StringUtils.EMPTY;
-    }
-    String result = rawStr;
-    result = result.replace("!", "");
-    result = result.replace("/", " ");
-    result = result.replace(' ', '+');
-    return result;
   }
 
 }

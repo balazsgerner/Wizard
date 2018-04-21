@@ -21,6 +21,10 @@ public class MusicFile {
 
   private Tag tag;
 
+  private Map<String, Map<String, Object>> queryResults;
+
+  private String lastQueryName;
+
   public MusicFile(File file) {
     try {
       this.file = AudioFileIO.read(file);
@@ -124,6 +128,22 @@ public class MusicFile {
       }
     });
     return attributeMap;
+  }
+
+  public Map<String, Map<String, Object>> getQueryResults() {
+    return queryResults;
+  }
+
+  public void setQueryResults(Map<String, Map<String, Object>> queryResults) {
+    this.queryResults = queryResults;
+  }
+
+  public String getLastQueryName() {
+    return lastQueryName;
+  }
+
+  public void setLastQueryName(String lastQueryName) {
+    this.lastQueryName = lastQueryName;
   }
 
 }

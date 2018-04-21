@@ -5,29 +5,34 @@
 		<code>SPOTIFY</code>
 		<name>Spotify</name>
 		<parameterized>false</parameterized>
+		<many>true</many>
 	</query>
 	<query>
 		<class>application.query.spotify.SpotifyIsrcQuery</class>
 		<code>SPOTIFYISRC</code>
 		<name>Spotify ISRC</name>
 		<parameterized>true</parameterized>
+		<many>false</many>
 	</query>
 	<query>
 		<class>application.query.musicbrainz.MusicbrainzQuery</class>
 		<code>MUSICBRAINZ</code>
 		<name>Musicbrainz</name>
 		<parameterized>false</parameterized>
+		<many>true</many>
 	</query>
 	<query>
 		<class>application.query.musicbrainz.MusicbrainzIsrcQuery</class>
 		<code>MUSICBRAINZISRC</code>
 		<name>Musicbrainz ISRC</name>
 		<parameterized>true</parameterized>
+		<many>false</many>
 	</query>
 	<query>
 		<class>application.query.acoustid.AcoustidQuery</class>
 		<code>ACOUSTID</code>
 		<name>Acoustid</name>
 		<parameterized>false</parameterized>
+		<many>false</many>
 	</query>
 </querymethods>

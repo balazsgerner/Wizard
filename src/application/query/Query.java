@@ -24,6 +24,9 @@ public class Query {
   @XmlElement
   protected boolean parameterized;
 
+  @XmlElement(name = "many")
+  protected boolean performManyQuery;
+
   @XmlElement(name = "class")
   protected String className;
 
@@ -37,7 +40,18 @@ public class Query {
   protected Map<String, Object> params;
 
   public Query() {
-    params = new HashMap<>();
+    this.results = new HashMap<>();
+    this.params = new HashMap<>();
+    init();
+  }
+
+  public Query(Query original) {
+    this.name = original.name;
+    this.code = original.code;
+    this.parameterized = original.parameterized;
+    this.className = original.className;
+    this.params = original.params;
+    init();
   }
 
   protected void init() {
@@ -46,8 +60,7 @@ public class Query {
 
   public void performQuery(MusicFile mf) {
     this.musicFile = mf;
-    this.results = new HashMap<String, Map<String, Object>>();
-    init();
+    this.results = new HashMap<>();
     String searchString = createSearchStr();
     fillResultsMap(searchString);
   }
@@ -112,6 +125,14 @@ public class Query {
 
   public void setParametrized(boolean parameterized) {
     this.parameterized = parameterized;
+  }
+
+  public boolean isPerformManyQuery() {
+    return performManyQuery;
+  }
+
+  public void setPerformManyQuery(boolean performManyQuery) {
+    this.performManyQuery = performManyQuery;
   }
 
 }

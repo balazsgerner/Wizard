@@ -2,6 +2,7 @@ package application;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -10,9 +11,14 @@ import java.util.ResourceBundle;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import application.query.Query;
+import application.query.QueryUtility;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,7 +26,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
@@ -28,8 +36,11 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Callback;
 import model.MusicFile;
@@ -58,7 +69,28 @@ public class MainWindowController implements Initializable {
   private Button btnTrackDetails;
 
   @FXML
+  private Button btnOpenLibrary;
+
+  @FXML
+  private MenuButton btnQueryAll;
+
+  @FXML
   private ProgressIndicator scanProgressIndicator;
+
+  @FXML
+  private ProgressBar queryProgressBar;
+
+  @FXML
+  private Label lblQueryStatus;
+
+  @FXML
+  private Label lblQueryName;
+
+  @FXML
+  private HBox pnlScanIndicator;
+
+  @FXML
+  private HBox pnlProgressIndicator;
 
   private List<String> supportedExtensions = Arrays.asList("mp3", "m4a", "flac");
 
@@ -67,37 +99,43 @@ public class MainWindowController implements Initializable {
   private FilteredList<MusicFile> filteredModel;
 
   @FXML
-  private void openLibrary() throws IOException {
+  private void openLibrary() {
     DirectoryChooser chooser = new DirectoryChooser();
     chooser.setTitle("Locate music library folder");
     File directory = chooser.showDialog(root.getScene().getWindow());
     if (directory != null) {
       model.clear();
       trackNumber.setText("");
+      pnlProgressIndicator.setVisible(false);
+      pnlScanIndicator.setVisible(true);
       scanProgressIndicator.setVisible(true);
       txtFilter.setText("");
       txtFilter.setDisable(true);
 
-      Task<Void> scanTask = new Task<Void>() {
+      Service<Void> openLibraryService = new Service<Void>() {
 
         @Override
-        protected Void call() throws Exception {
-          scanLibrary(directory);
-          return null;
-        }
+        protected Task<Void> createTask() {
+          return new Task<Void>() {
 
-        @Override
-        protected void succeeded() {
-          scanProgressIndicator.setVisible(false);
-          txtFilter.setDisable(false);
-          trackNumber.setText(model.size() + " tracks found");
+            @Override
+            protected Void call() throws Exception {
+              scanLibrary(directory);
+              return null;
+            }
+
+            @Override
+            protected void succeeded() {
+              scanProgressIndicator.setVisible(false);
+              txtFilter.setDisable(false);
+              trackNumber.setText(model.size() + " tracks found");
+            }
+          };
         }
       };
 
-      scanProgressIndicator.progressProperty().bind(scanTask.progressProperty());
-      Thread thread = new Thread(scanTask);
-      thread.setDaemon(true);
-      thread.start();
+      openLibraryService.start();
+      scanProgressIndicator.progressProperty().bind(openLibraryService.progressProperty());
     }
   }
 
@@ -140,6 +178,7 @@ public class MainWindowController implements Initializable {
     TableColumn<MusicFile, String> yearColumn = new TableColumn<>("Year");
     yearColumn.setCellValueFactory(new PropertyValueFactory<>("year"));
 
+    initBtnQueryAll();
     filteredModel = new FilteredList<>(model);
     musicDetails.setItems(filteredModel);
 
@@ -155,6 +194,61 @@ public class MainWindowController implements Initializable {
 
     musicDetails.getSelectionModel().selectedItemProperty().addListener(e -> enableTrackDetailsButton());
     txtFilter.textProperty().addListener(e -> filterTableModel());
+    initProgressIndicators();
+    initBtnOpenLibrary();
+  }
+
+  private void initBtnOpenLibrary() {
+    InputStream url = getClass().getResourceAsStream("/resources/images/folder.png");
+    btnOpenLibrary.setGraphic(new ImageView(new Image(url, 20, 20, true, true)));
+    btnOpenLibrary.setOnAction(e -> openLibrary());
+  }
+
+  private void initProgressIndicators() {
+    pnlScanIndicator.managedProperty().bind(pnlScanIndicator.visibleProperty());
+    scanProgressIndicator.managedProperty().bind(scanProgressIndicator.visibleProperty());
+    pnlProgressIndicator.managedProperty().bind(pnlProgressIndicator.visibleProperty());
+    queryProgressBar.managedProperty().bind(queryProgressBar.visibleProperty());
+  }
+
+  private void initBtnQueryAll() {
+    ListChangeListener<MusicFile> modelEmptyListener = new ListChangeListener<MusicFile>() {
+
+      @Override
+      public void onChanged(Change<? extends MusicFile> c) {
+        boolean modelEmpty = model.isEmpty();
+        boolean disabled = btnQueryAll.isDisabled();
+        if (modelEmpty && !disabled) {
+          btnQueryAll.setDisable(true);
+        } else if (!modelEmpty && disabled) {
+          btnQueryAll.setDisable(false);
+        }
+      }
+    };
+    model.addListener(modelEmptyListener);
+    QueryUtility queryUtility = QueryUtility.getInstance();
+    queryUtility.getQueryMethods().stream().filter(q -> q.isPerformManyQuery()).forEach(q -> {
+      MenuItem menuItem = new MenuItem(q.getName());
+      btnQueryAll.getItems().add(menuItem);
+      menuItem.setOnAction(e -> {
+        pnlScanIndicator.setVisible(false);
+        pnlProgressIndicator.setVisible(true);
+        queryProgressBar.setVisible(true);
+        Service<Void> queryService = new Service<>() {
+
+          @Override
+          protected Task<Void> createTask() {
+            Task<Void> queryTask = new QueryTask(q);
+            queryProgressBar.progressProperty().bind(queryTask.progressProperty());
+            return queryTask;
+          }
+        };
+        lblQueryName.setText(q.getName() + " query");
+        queryService.start();
+      });
+
+    });
+
   }
 
   private Callback<TableView<MusicFile>, TableRow<MusicFile>> createRowFactory() {
@@ -213,6 +307,38 @@ public class MainWindowController implements Initializable {
     } catch (IOException e1) {
       e1.printStackTrace();
     }
+  }
+
+  public class QueryTask extends Task<Void> {
+
+    private Query query;
+
+    public QueryTask(Query q) {
+      this.query = q;
+    }
+
+    @Override
+    protected Void call() throws Exception {
+      QueryUtility.getInstance().performManyQueries(model, query, this);
+      return null;
+    }
+
+    @Override
+    public void updateProgress(long workDone, long max) {
+      super.updateProgress(workDone, max);
+      Platform.runLater(() -> {
+        int progress = (int) (queryProgressBar.getProgress() * 100);
+        lblQueryStatus.setText(String.format("%3s%s", progress, "%"));
+      });
+    }
+
+    @Override
+    protected void succeeded() {
+      super.succeeded();
+      lblQueryStatus.setText("100% finished");
+      queryProgressBar.setVisible(false);
+    }
+
   }
 
 }

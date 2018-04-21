@@ -27,8 +27,6 @@ public class Main extends Application {
       Scene scene = new Scene(root, 800, 600);
       scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 
-      initQueryMethods();
-
       Properties prop = new Properties();
       prop.load(getClass().getResourceAsStream("/resources/properties/application.properties"));
 
@@ -42,12 +40,17 @@ public class Main extends Application {
     }
   }
 
-  private void initQueryMethods() throws JAXBException {
-    QueryUtility instance = QueryUtility.getInstance();
-    JAXBContext jaxbContext = JAXBContext.newInstance(QueryUtility.class);
-    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-    QueryUtility qm = (QueryUtility) jaxbUnmarshaller.unmarshal(getClass().getResource("/resources/xml/query_methods.xml"));
-    instance.setQueryMethods(qm.getQueryMethods());
+  private static void initQueryMethods() {
+    try {
+      QueryUtility instance = QueryUtility.getInstance();
+      JAXBContext jaxbContext;
+      jaxbContext = JAXBContext.newInstance(QueryUtility.class);
+      Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+      QueryUtility qm = (QueryUtility) jaxbUnmarshaller.unmarshal(Main.class.getResource("/resources/xml/query_methods.xml"));
+      instance.setQueryMethods(qm.getQueryMethods());
+    } catch (JAXBException e) {
+      e.printStackTrace();
+    }
 
   }
 
@@ -60,6 +63,7 @@ public class Main extends Application {
 
   public static void main(String[] args) {
     disableWarning();
+    initQueryMethods();
     launch(args);
   }
 

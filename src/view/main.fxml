@@ -5,7 +5,9 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
@@ -14,7 +16,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.MainWindowController">
+<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="729.0" prefWidth="1194.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.MainWindowController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
@@ -47,9 +49,10 @@
             </TableView>
          </center>
          <top>
-            <ToolBar nodeOrientation="LEFT_TO_RIGHT">
+            <ToolBar nodeOrientation="LEFT_TO_RIGHT" BorderPane.alignment="TOP_LEFT">
               <items>
-                  <HBox alignment="TOP_RIGHT" nodeOrientation="LEFT_TO_RIGHT">
+                  <Button fx:id="btnOpenLibrary" mnemonicParsing="false" text="Open Library" />
+                  <HBox nodeOrientation="LEFT_TO_RIGHT">
                      <children>
                         <TextField fx:id="txtFilter" promptText="Filter" />
                       <Button fx:id="btnClearFilter" disable="true" graphicTextGap="0.0" maxHeight="15.0" maxWidth="26.0" mnemonicParsing="false" onAction="#clearFilterText" text="x">
@@ -63,6 +66,7 @@
                      </padding>
                   </HBox>
                   <Button fx:id="btnTrackDetails" disable="true" mnemonicParsing="false" text="Track details..." />
+                  <MenuButton fx:id="btnQueryAll" disable="true" mnemonicParsing="false" text="Query all..." />
               </items>
                <BorderPane.margin>
                   <Insets />
@@ -77,9 +81,38 @@
    <bottom>
       <ToolBar nodeOrientation="RIGHT_TO_LEFT" prefHeight="40.0" BorderPane.alignment="CENTER_RIGHT">
          <items>
-            <ProgressIndicator fx:id="scanProgressIndicator" prefHeight="15.0" prefWidth="25.0" visible="false" />
-            <Label fx:id="trackNumber" prefHeight="15.0" />
+            <HBox alignment="CENTER_LEFT" nodeOrientation="LEFT_TO_RIGHT">
+               <children>
+                  <HBox fx:id="pnlProgressIndicator" alignment="CENTER_LEFT" spacing="5.0" visible="false">
+                     <children>
+                        <Label fx:id="lblQueryName" layoutX="10.0" layoutY="17.0">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="lblQueryStatus" />
+                        <ProgressBar fx:id="queryProgressBar" prefWidth="200.0" progress="0.0" />
+                     </children>
+                  </HBox>
+                  <HBox fx:id="pnlScanIndicator" alignment="CENTER_LEFT">
+                     <children>
+                        <Label fx:id="trackNumber">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Label>
+                        <ProgressIndicator fx:id="scanProgressIndicator" prefHeight="15.0" prefWidth="25.0" visible="false" />
+                     </children>
+                  </HBox>
+               </children>
+               <padding>
+                  <Insets right="15.0" />
+               </padding>
+            </HBox>
          </items>
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
       </ToolBar>
    </bottom>
 </BorderPane>

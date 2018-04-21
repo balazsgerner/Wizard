@@ -40,6 +40,10 @@ public class SpotifyQuery extends Query {
 
   private int imgNum;
 
+  public SpotifyQuery(Query query) {
+    super(query);
+  }
+
   @Override
   protected void init() {
     prop = new Properties();
@@ -112,7 +116,7 @@ public class SpotifyQuery extends Query {
   @Override
   protected String createSearchStr() {
     String band = musicFile.getBand();
-    String title = musicFile.getTitle();
+    String title = removeFeaturing(musicFile.getTitle());
     String searchString = "";
 
     if (!StringUtils.isEmpty(band)) {
@@ -120,9 +124,13 @@ public class SpotifyQuery extends Query {
     }
 
     if (!StringUtils.isEmpty(title)) {
-      searchString += " + title:" + title;
+      searchString += " title:" + title;
     }
     return searchString;
+  }
+
+  private String removeFeaturing(String title) {
+    return title.replaceAll("\\((feat\\.|Feat\\.|featuring|Featuring).*?\\)", "").trim();
   }
 
   private String getListOfArtists(ArtistSimplified[] artists) {

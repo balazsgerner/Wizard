@@ -3,7 +3,6 @@ package application.query.acoustid;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -20,7 +19,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import application.query.Query;
-import model.MusicFile;
 
 public class AcoustidQuery extends Query {
 
@@ -28,77 +26,87 @@ public class AcoustidQuery extends Query {
 
   public static final String CODE = "ACOUSTID";
 
-  @Override
-  protected void init() {
-    URL url = getClass().getResource("/resources/binaries/fpcalc.exe");
-    pb = new ProcessBuilder(url.getPath(), musicFile.getPath());
+  private String duration;
+
+  private String fingerPrint;
+
+  public AcoustidQuery(Query query) {
+    super(query);
   }
 
   @Override
-  public void performQuery(MusicFile mf) {
-    super.performQuery(mf);
+  protected String createSearchStr() {
     try {
-      Process p = pb.start();
+      URL url = getClass().getResource("/resources/binaries/fpcalc.exe");
+      pb = new ProcessBuilder(url.getPath(), musicFile.getPath());
+      Process p;
+      p = pb.start();
       BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
       String line = null;
       line = br.readLine();
-      String duration = line.split("DURATION=")[1];
+      duration = line.split("DURATION=")[1];
       line = br.readLine();
-      String fingerPrint = line.split("FINGERPRINT=")[1];
-      buildURL(duration, fingerPrint);
-    } catch (IOException | UnirestException e) {
+      fingerPrint = line.split("FINGERPRINT=")[1];
+    } catch (IOException e) {
       e.printStackTrace();
     }
+
+    return null;
   }
 
-  private void buildURL(String duration, String fingerPrint) throws IOException, UnirestException {
+  @Override
+  protected void fillResultsMap(String searchString) {
     Properties prop = new Properties();
-    prop.load(getClass().getResourceAsStream("/resources/properties/acoustid.properties"));
-    HttpResponse<JsonNode> response = Unirest.get(prop.getProperty("acoustid_url")).header("accept", "application/json")
-        .queryString("client", prop.getProperty("acoustid_client_key")).queryString("duration", duration).queryString("fingerprint", fingerPrint)
-        .queryString("meta", prop.getProperty("acoustid_meta")).asJson();
+    try {
+      prop.load(getClass().getResourceAsStream("/resources/properties/acoustid.properties"));
+      HttpResponse<JsonNode> response;
+      response = Unirest.get(prop.getProperty("acoustid_url")).header("accept", "application/json")
+          .queryString("client", prop.getProperty("acoustid_client_key")).queryString("duration", duration).queryString("fingerprint", fingerPrint)
+          .queryString("meta", prop.getProperty("acoustid_meta")).asJson();
+      JSONObject jsonObject = new JSONObject(response.getBody().toString());
+      JSONArray resultsArray = jsonObject.getJSONArray("results");
 
-    JSONObject jsonObject = new JSONObject(response.getBody().toString());
-    JSONArray resultsArray = jsonObject.getJSONArray("results");
+      for (int i = 0; i < resultsArray.length(); i++) {
+        JSONObject track = resultsArray.getJSONObject(i);
+        try {
+          JSONArray recordings = track.getJSONArray("recordings");
+          for (int j = 0; j < recordings.length(); j++) {
 
-    for (int i = 0; i < resultsArray.length(); i++) {
-      JSONObject track = resultsArray.getJSONObject(i);
-      try {
-        JSONArray recordings = track.getJSONArray("recordings");
-        for (int j = 0; j < recordings.length(); j++) {
+            Map<String, Object> recordingData = new HashMap<>();
+            JSONObject recording = recordings.getJSONObject(j);
 
-          Map<String, Object> recordingData = new HashMap<>();
-          JSONObject recording = recordings.getJSONObject(j);
+            String recordingId = recording.getString("id");
+            recordingData.put("recordingid", recordingId);
 
-          String recordingId = recording.getString("id");
-          recordingData.put("recordingid", recordingId);
+            JSONArray artists = recording.getJSONArray("artists");
+            List<String> artistNames = new ArrayList<>();
+            for (int k = 0; k < artists.length(); k++) {
+              JSONObject artist = artists.getJSONObject(k);
+              artistNames.add(artist.getString("name"));
+            }
+            recordingData.put("Artist", String.join(", ", artistNames));
 
-          JSONArray artists = recording.getJSONArray("artists");
-          List<String> artistNames = new ArrayList<>();
-          for (int k = 0; k < artists.length(); k++) {
-            JSONObject artist = artists.getJSONObject(k);
-            artistNames.add(artist.getString("name"));
-          }
-          recordingData.put("Artist", String.join(", ", artistNames));
-
-          try {
-            int drtn = recording.getInt("duration");
-            String drtnStr = String.format("%02d:%02d", drtn / 60, drtn % 60);
-            recordingData.put("duration", drtnStr);
-          } catch (JSONException e) {
-          } finally {
             try {
-              recordingData.put("recording title", recording.getString("title"));
+              int drtn = recording.getInt("duration");
+              String drtnStr = String.format("%02d:%02d", drtn / 60, drtn % 60);
+              recordingData.put("duration", drtnStr);
+            } catch (JSONException e) {
             } finally {
-              results.put(recordingId, recordingData);
+              try {
+                recordingData.put("recording title", recording.getString("title"));
+              } finally {
+                results.put(recordingId, recordingData);
+              }
             }
           }
+
+        } catch (JSONException e) {
         }
-
-      } catch (JSONException e) {
       }
-    }
 
+    } catch (Exception e1) {
+      e1.printStackTrace();
+    }
   }
 
 }

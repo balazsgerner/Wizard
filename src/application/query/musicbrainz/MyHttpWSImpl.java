@@ -27,6 +27,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParamBean;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
 import org.musicbrainz.webservice.AuthorizationException;
 import org.musicbrainz.webservice.RequestException;
 import org.musicbrainz.webservice.ResourceNotFoundException;
@@ -185,10 +186,12 @@ public class MyHttpWSImpl extends MyWebServiceWS2 {
     // Try using compression
     method.setHeader("Accept-Encoding", "gzip");
 
+    HttpResponse response = null;
+
     try {
       // Execute the method.
       log.debug("Hitting url: " + method.getURI().toString());
-      HttpResponse response = this.httpClient.execute(method);
+      response = this.httpClient.execute(method);
 
       lastHitTime = System.currentTimeMillis();
 
@@ -251,6 +254,8 @@ public class MyHttpWSImpl extends MyWebServiceWS2 {
     } catch (IOException e) {
       log.error("Fatal transport error: " + e.getMessage());
       throw new WebServiceException(e.getMessage(), e);
+    } finally {
+      EntityUtils.consumeQuietly(response.getEntity());
     }
   }
 

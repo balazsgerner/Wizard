@@ -161,6 +161,14 @@ public class TrackDetailsController implements Initializable {
   }
 
   private void initTblResults() {
+    MusicFile selectedFile = paramBean.musicFile;
+    Map<String, Map<String, Object>> queryResults = selectedFile.getQueryResults();
+    if (queryResults != null) {
+      String lastQueryName = selectedFile.getLastQueryName();
+      results = queryResults;
+      refreshUIAfterQuery(lastQueryName);
+    }
+
     listQueryResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshValuesInTable());
     tblResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshImageIfNeeded());
   }
@@ -245,23 +253,25 @@ public class TrackDetailsController implements Initializable {
       @Override
       public void run() {
         performQuery(query);
-        progressQuery.setVisible(false);
-
-        Set<String> keySet = results.keySet();
-        listQueryResults.setItems(FXCollections.observableArrayList(keySet));
-        boolean isempty = keySet.isEmpty();
-        if (!isempty) {
-          listQueryResults.getSelectionModel().select(0);
-        } else {
-          Label placeHolder = new Label("No results found for track!");
-          placeHolder.getStyleClass().add("placeHolder");
-          listQueryResults.setPlaceholder(placeHolder);
-        }
-        lblQueryName.setText(query.getName()+" ");
-        lblQueryResults.setText(lblQueryResults.getText().toLowerCase());
-
+        refreshUIAfterQuery(query.getName());
       }
+
     });
+  }
+
+  private void refreshUIAfterQuery(String queryName) {
+    Set<String> keySet = results.keySet();
+    listQueryResults.setItems(FXCollections.observableArrayList(keySet));
+    boolean isempty = keySet.isEmpty();
+    if (!isempty) {
+      Platform.runLater(() -> listQueryResults.getSelectionModel().select(0));
+    } else {
+      Label placeHolder = new Label("No results found for track!");
+      placeHolder.getStyleClass().add("placeHolder");
+      listQueryResults.setPlaceholder(placeHolder);
+    }
+    lblQueryName.setText(queryName + " ");
+    lblQueryResults.setText(lblQueryResults.getText().toLowerCase());
   }
 
   private void performQuery(Query query) {
