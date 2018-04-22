@@ -2,3 +2,18 @@
 	-fx-font-size: 20px;
 	-fx-font-weight: bold;
 }
+
+.success {
+	-fx-text-fill: green;
+	-fx-font-weight: bold;
+}
+
+.default {
+	-fx-text-fill: black;
+	-fx-font-weight: normal;
+}
+
+.error {
+	-fx-text-fill: red;
+	-fx-font-weight: bold;
+}

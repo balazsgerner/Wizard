@@ -1,6 +1,7 @@
 package application.query;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,14 +46,15 @@ public class QueryUtility {
     this.queryMethods = queryMethods;
   }
 
-  public Map<String, Map<String, Object>> performQuery(MusicFile musicFile, Query query) {
+  public Map<String, Map<String, Object>> performQuery(MusicFile musicFile, Query query) throws ConnectException {
     Query queryMethod = null;
     try {
       queryMethod = getQueryMethodInstance(query);
-      queryMethod.performQuery(musicFile);
     } catch (Exception e) {
       e.printStackTrace();
     }
+
+    queryMethod.performQuery(musicFile);
     return queryMethod.getResults();
   }
 
@@ -69,7 +71,7 @@ public class QueryUtility {
     return queryMethod;
   }
 
-  public void performManyQueries(List<MusicFile> musicFiles, Query query, QueryTask queryTask) {
+  public void performManyQueries(List<MusicFile> musicFiles, Query query, QueryTask queryTask) throws ConnectException {
     queryTask.updateProgress(0, 100);
     int listSize = musicFiles.size();
     for (int i = 0; i < listSize; i++) {

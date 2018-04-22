@@ -1,6 +1,7 @@
 package application;
 
 import java.io.ByteArrayInputStream;
+import java.net.ConnectException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,8 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -95,9 +98,6 @@ public class TrackDetailsController implements Initializable {
   private ImageView imgAlbum;
 
   @FXML
-  private ProgressIndicator progressQuery;
-
-  @FXML
   private ListView<String> listQueryResults;
 
   @FXML
@@ -118,6 +118,15 @@ public class TrackDetailsController implements Initializable {
   @FXML
   private TableColumn<Map.Entry<String, Object>, String> orgAttributeColumn;
 
+  @FXML
+  private ProgressIndicator progressIndicator;
+
+  @FXML
+  private Label lblQueryStatus;
+
+  @FXML
+  private Label lblQName;
+
   private Parent callerWindowRoot;
 
   private TrackDetailsParamBean paramBean;
@@ -125,6 +134,8 @@ public class TrackDetailsController implements Initializable {
   private Map<String, Map<String, Object>> results;
 
   private Image originalImg;
+
+  private QueryService queryService;
 
   public TrackDetailsController(Parent callerWindowRoot, TrackDetailsParamBean parambean) {
     this.callerWindowRoot = callerWindowRoot;
@@ -139,6 +150,13 @@ public class TrackDetailsController implements Initializable {
     initTblOriginal();
     initTblResults();
     initTxtIsrc();
+    initStatusBarComponents();
+  }
+
+  private void initStatusBarComponents() {
+    lblQName.managedProperty().bind(lblQName.visibleProperty());
+    lblQueryStatus.managedProperty().bind(lblQueryStatus.visibleProperty());
+    progressIndicator.managedProperty().bind(progressIndicator.visibleProperty());
   }
 
   private void initTxtIsrc() {
@@ -166,7 +184,7 @@ public class TrackDetailsController implements Initializable {
     if (queryResults != null) {
       String lastQueryName = selectedFile.getLastQueryName();
       results = queryResults;
-      refreshUIAfterQuery(lastQueryName);
+      Platform.runLater(() -> refreshUIAfterQuery(lastQueryName));
     }
 
     listQueryResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshValuesInTable());
@@ -247,16 +265,19 @@ public class TrackDetailsController implements Initializable {
     };
   }
 
+  private QueryService getQueryService(Query query) {
+    if (queryService == null) {
+      queryService = new QueryService(query);
+    } else {
+      queryService.setQuery(query);
+    }
+    return queryService;
+  }
+
   private void runQueryInBackground(Query query) {
-    Platform.runLater(new Runnable() {
+    QueryService service = getQueryService(query);
+    service.restart();
 
-      @Override
-      public void run() {
-        performQuery(query);
-        refreshUIAfterQuery(query.getName());
-      }
-
-    });
   }
 
   private void refreshUIAfterQuery(String queryName) {
@@ -264,17 +285,18 @@ public class TrackDetailsController implements Initializable {
     listQueryResults.setItems(FXCollections.observableArrayList(keySet));
     boolean isempty = keySet.isEmpty();
     if (!isempty) {
-      Platform.runLater(() -> listQueryResults.getSelectionModel().select(0));
+      listQueryResults.getSelectionModel().select(0);
     } else {
       Label placeHolder = new Label("No results found for track!");
       placeHolder.getStyleClass().add("placeHolder");
       listQueryResults.setPlaceholder(placeHolder);
     }
+
     lblQueryName.setText(queryName + " ");
     lblQueryResults.setText(lblQueryResults.getText().toLowerCase());
   }
 
-  private void performQuery(Query query) {
+  private void performQuery(Query query) throws ConnectException {
     if (query.isParametrized()) {
       query.setParam("isrc", txtIsrc.getText());
     }
@@ -352,6 +374,65 @@ public class TrackDetailsController implements Initializable {
   @FXML
   private void backToMainView() {
     root.getScene().setRoot(callerWindowRoot);
+  }
+
+  private class QueryService extends Service<Void> {
+
+    private Query query;
+
+    public QueryService(Query query) {
+      this.query = query;
+      progressIndicator.progressProperty().bind(progressProperty());
+    }
+
+    @Override
+    protected Task<Void> createTask() {
+      return new Task<Void>() {
+
+        @Override
+        protected Void call() throws Exception {
+          initUI();
+          try {
+            performQuery(query);
+          } catch (ConnectException e) {
+            cancel();
+          }
+          return null;
+        }
+
+      };
+    }
+
+    private void initUI() {
+      Platform.runLater(() -> {
+        lblQName.setText(query.getName() + " query");
+        lblQueryStatus.setText("");
+        progressIndicator.setVisible(true);
+      });
+    }
+
+    @Override
+    protected void cancelled() {
+      Platform.runLater((() -> {
+        lblQueryStatus.getStyleClass().setAll("error");
+        progressIndicator.setVisible(false);
+        lblQueryStatus.setText("Cannot connect to web service!");
+      }));
+    }
+
+    @Override
+    protected void succeeded() {
+      Platform.runLater(() -> {
+        progressIndicator.setVisible(false);
+        lblQueryStatus.getStyleClass().setAll("success");
+        lblQueryStatus.setText("Finished");
+        refreshUIAfterQuery(query.getName());
+      });
+    }
+
+    public void setQuery(Query query) {
+      this.query = query;
+    }
   }
 
 }

@@ -3,6 +3,7 @@ package application;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +41,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Callback;
@@ -48,7 +50,7 @@ import model.MusicFile;
 public class MainWindowController implements Initializable {
 
   @FXML
-  private Parent root;
+  private BorderPane root;
 
   @FXML
   private MenuItem openMenuItem;
@@ -98,6 +100,8 @@ public class MainWindowController implements Initializable {
 
   private FilteredList<MusicFile> filteredModel;
 
+  private OpenLibraryService openLibraryService;
+
   @FXML
   private void openLibrary() {
     DirectoryChooser chooser = new DirectoryChooser();
@@ -109,34 +113,23 @@ public class MainWindowController implements Initializable {
       pnlProgressIndicator.setVisible(false);
       pnlScanIndicator.setVisible(true);
       scanProgressIndicator.setVisible(true);
-      txtFilter.setText("");
+      clearFilterText();
       txtFilter.setDisable(true);
 
-      Service<Void> openLibraryService = new Service<Void>() {
+      openLibraryService = getOpenLibraryService(directory);
 
-        @Override
-        protected Task<Void> createTask() {
-          return new Task<Void>() {
-
-            @Override
-            protected Void call() throws Exception {
-              scanLibrary(directory);
-              return null;
-            }
-
-            @Override
-            protected void succeeded() {
-              scanProgressIndicator.setVisible(false);
-              txtFilter.setDisable(false);
-              trackNumber.setText(model.size() + " tracks found");
-            }
-          };
-        }
-      };
-
-      openLibraryService.start();
+      openLibraryService.restart();
       scanProgressIndicator.progressProperty().bind(openLibraryService.progressProperty());
     }
+  }
+
+  private OpenLibraryService getOpenLibraryService(File directory) {
+    if (openLibraryService == null) {
+      openLibraryService = new OpenLibraryService(directory);
+    } else {
+      openLibraryService.setDirectory(directory);
+    }
+    return openLibraryService;
   }
 
   private void scanLibrary(File library) {
@@ -200,7 +193,7 @@ public class MainWindowController implements Initializable {
 
   private void initBtnOpenLibrary() {
     InputStream url = getClass().getResourceAsStream("/resources/images/folder.png");
-    btnOpenLibrary.setGraphic(new ImageView(new Image(url, 20, 20, true, true)));
+    btnOpenLibrary.setGraphic(new ImageView(new Image(url, 24, 24, true, false)));
     btnOpenLibrary.setOnAction(e -> openLibrary());
   }
 
@@ -227,8 +220,8 @@ public class MainWindowController implements Initializable {
     };
     model.addListener(modelEmptyListener);
     QueryUtility queryUtility = QueryUtility.getInstance();
-    queryUtility.getQueryMethods().stream().filter(q -> q.isPerformManyQuery()).forEach(q -> {
-      MenuItem menuItem = new MenuItem(q.getName());
+    queryUtility.getQueryMethods().stream().filter(q -> q.isPerformManyQuery()).forEach(query -> {
+      MenuItem menuItem = new MenuItem(query.getName());
       btnQueryAll.getItems().add(menuItem);
       menuItem.setOnAction(e -> {
         pnlScanIndicator.setVisible(false);
@@ -238,12 +231,12 @@ public class MainWindowController implements Initializable {
 
           @Override
           protected Task<Void> createTask() {
-            Task<Void> queryTask = new QueryTask(q);
+            Task<Void> queryTask = new QueryTask(query);
             queryProgressBar.progressProperty().bind(queryTask.progressProperty());
             return queryTask;
           }
         };
-        lblQueryName.setText(q.getName() + " query");
+        lblQueryName.setText(query.getName() + " query");
         queryService.start();
       });
 
@@ -309,6 +302,39 @@ public class MainWindowController implements Initializable {
     }
   }
 
+  private final class OpenLibraryService extends Service<Void> {
+
+    private File directory;
+
+    private OpenLibraryService(File directory) {
+      this.directory = directory;
+    }
+
+    public void setDirectory(File directory) {
+      this.directory = directory;
+    }
+
+    @Override
+    protected Task<Void> createTask() {
+      return new Task<Void>() {
+
+        @Override
+        protected Void call() throws Exception {
+          scanLibrary(directory);
+          return null;
+        }
+
+        @Override
+        protected void succeeded() {
+          scanProgressIndicator.setVisible(false);
+          txtFilter.setDisable(false);
+          trackNumber.setText(model.size() + " tracks found");
+          filterTableModel();
+        }
+      };
+    }
+  }
+
   public class QueryTask extends Task<Void> {
 
     private Query query;
@@ -319,8 +345,22 @@ public class MainWindowController implements Initializable {
 
     @Override
     protected Void call() throws Exception {
-      QueryUtility.getInstance().performManyQueries(model, query, this);
+      try {
+        QueryUtility.getInstance().performManyQueries(model, query, this);
+      } catch (ConnectException e) {
+        showError(e);
+        cancel();
+      }
       return null;
+    }
+
+    private void showError(Exception e) {
+      Platform.runLater(() -> {
+        lblQueryStatus.getStyleClass().setAll("error");
+        lblQueryStatus.setText("Cannot connect to web service!");
+        queryProgressBar.setVisible(false);
+      });
+
     }
 
     @Override
@@ -328,15 +368,20 @@ public class MainWindowController implements Initializable {
       super.updateProgress(workDone, max);
       Platform.runLater(() -> {
         int progress = (int) (queryProgressBar.getProgress() * 100);
+        lblQueryStatus.getStyleClass().setAll("default");
         lblQueryStatus.setText(String.format("%3s%s", progress, "%"));
       });
     }
 
     @Override
     protected void succeeded() {
-      super.succeeded();
-      lblQueryStatus.setText("100% finished");
-      queryProgressBar.setVisible(false);
+      Platform.runLater(() -> {
+
+        super.succeeded();
+        lblQueryStatus.getStyleClass().setAll("success");
+        lblQueryStatus.setText("Finished");
+        queryProgressBar.setVisible(false);
+      });
     }
 
   }

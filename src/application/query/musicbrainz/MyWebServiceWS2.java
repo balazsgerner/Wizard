@@ -9,6 +9,9 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.musicbrainz.webservice.DefaultWebServiceWs2;
+import org.musicbrainz.webservice.WebServiceException;
+import org.musicbrainz.wsxml.MbXMLException;
+import org.musicbrainz.wsxml.element.Metadata;
 
 public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
 
@@ -30,6 +33,18 @@ public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  @Override
+  public Metadata get(String entity, String id, List<String> includeParams, Map<String, String> filterParams)
+      throws WebServiceException, MbXMLException {
+    String url = this.makeURL(entity, id, includeParams, filterParams);
+
+    Metadata results = doGet(url);
+    if (results == null) {
+      throw new WebServiceException("Cannot connect to web service, now aborting!");
+    }
+    return results;
   }
 
   @Override

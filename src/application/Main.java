@@ -7,6 +7,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.jaudiotagger.audio.AudioFile;
 
@@ -55,7 +56,8 @@ public class Main extends Application {
   }
 
   public static void disableWarning() {
-    Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
+    BasicConfigurator.configure();
+    Logger.getRootLogger().setLevel(org.apache.log4j.Level.ERROR);
     AudioFile.logger.setLevel(Level.OFF);
     System.err.close();
     System.setErr(System.out);

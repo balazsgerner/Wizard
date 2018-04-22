@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="729.0" prefWidth="1194.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.MainWindowController">
+<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.MainWindowController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
@@ -42,31 +42,40 @@
    <center>
       <BorderPane>
          <center>
-            <TableView fx:id="musicDetails" prefHeight="373.0" prefWidth="417.0" tableMenuButtonVisible="true">
+            <TableView fx:id="musicDetails" minWidth="350.0" tableMenuButtonVisible="true">
                <columnResizePolicy>
                   <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                </columnResizePolicy>
             </TableView>
          </center>
          <top>
-            <ToolBar nodeOrientation="LEFT_TO_RIGHT" BorderPane.alignment="TOP_LEFT">
+            <ToolBar minHeight="40.0" minWidth="0.0" nodeOrientation="LEFT_TO_RIGHT" BorderPane.alignment="BOTTOM_LEFT">
               <items>
-                  <Button fx:id="btnOpenLibrary" mnemonicParsing="false" text="Open Library" />
-                  <HBox nodeOrientation="LEFT_TO_RIGHT">
+                  <HBox alignment="BOTTOM_LEFT" nodeOrientation="LEFT_TO_RIGHT">
                      <children>
-                        <TextField fx:id="txtFilter" promptText="Filter" />
-                      <Button fx:id="btnClearFilter" disable="true" graphicTextGap="0.0" maxHeight="15.0" maxWidth="26.0" mnemonicParsing="false" onAction="#clearFilterText" text="x">
+                        <Button fx:id="btnOpenLibrary" maxHeight="34.0" mnemonicParsing="false" prefHeight="34.0" text="Open Library">
+                           <HBox.margin>
+                              <Insets right="10.0" />
+                           </HBox.margin>
+                        </Button>
+                        <TextField fx:id="txtFilter" maxHeight="34.0" prefHeight="34.0" promptText="Filter" />
+                      <Button fx:id="btnClearFilter" disable="true" graphicTextGap="0.0" maxHeight="34.0" mnemonicParsing="false" onAction="#clearFilterText" prefHeight="34.0" text="x">
                            <font>
                               <Font name="System Bold" size="12.0" />
                            </font>
                         </Button>
+                        <Button fx:id="btnTrackDetails" disable="true" maxHeight="34.0" mnemonicParsing="false" prefHeight="34.0" text="Track details...">
+                           <HBox.margin>
+                              <Insets left="10.0" />
+                           </HBox.margin>
+                        </Button>
+                        <MenuButton fx:id="btnQueryAll" disable="true" maxHeight="34.0" mnemonicParsing="false" prefHeight="34.0" text="Query all...">
+                           <HBox.margin>
+                              <Insets left="5.0" />
+                           </HBox.margin>
+                        </MenuButton>
                      </children>
-                     <padding>
-                        <Insets right="10.0" />
-                     </padding>
                   </HBox>
-                  <Button fx:id="btnTrackDetails" disable="true" mnemonicParsing="false" text="Track details..." />
-                  <MenuButton fx:id="btnQueryAll" disable="true" mnemonicParsing="false" text="Query all..." />
               </items>
                <BorderPane.margin>
                   <Insets />

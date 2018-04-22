@@ -1,5 +1,6 @@
 package application.query;
 
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,7 +59,7 @@ public class Query {
     // to be overridden
   }
 
-  public void performQuery(MusicFile mf) {
+  public void performQuery(MusicFile mf) throws ConnectException {
     this.musicFile = mf;
     this.results = new HashMap<>();
     String searchString = createSearchStr();
@@ -70,7 +71,7 @@ public class Query {
     return null;
   }
 
-  protected void fillResultsMap(String searchString) {
+  protected void fillResultsMap(String searchString) throws ConnectException {
     // to be overridden
   }
 

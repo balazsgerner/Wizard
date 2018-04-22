@@ -54,12 +54,12 @@
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Label fx:id="lblArtist" text="Artist" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                  <Label fx:id="lblArtist" text="Artist" GridPane.columnSpan="5" GridPane.rowIndex="1">
                      <font>
                         <Font name="System Bold" size="20.0" />
                      </font>
                   </Label>
-                  <Label fx:id="lblTitle" text="Title" GridPane.columnSpan="2" GridPane.rowIndex="2">
+                  <Label fx:id="lblTitle" text="Title" GridPane.columnSpan="5" GridPane.rowIndex="2">
                      <font>
                         <Font size="20.0" />
                      </font>
@@ -86,7 +86,7 @@
                   <MenuButton fx:id="btnPerformQuery" mnemonicParsing="false" prefHeight="35.0" text="Perform query..." GridPane.columnIndex="5" GridPane.rowIndex="3" />
                   <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="3" GridPane.valignment="BOTTOM">
                      <children>
-                        <Label alignment="BOTTOM_LEFT" text="ISRC" />
+                        <Label alignment="BOTTOM_LEFT" minWidth="25.0" text="ISRC" />
                         <TextField fx:id="txtIsrc" alignment="BOTTOM_LEFT" disable="true" HBox.hgrow="ALWAYS" />
                         <MenuButton fx:id="btnLookukIsrc" disable="true" mnemonicParsing="false" text="Lookup ISRC..." />
                      </children>
@@ -289,7 +289,20 @@
    <bottom>
       <ToolBar nodeOrientation="RIGHT_TO_LEFT" prefHeight="40.0" BorderPane.alignment="CENTER">
         <items>
-            <ProgressIndicator fx:id="progressQuery" prefHeight="15.0" prefWidth="25.0" visible="false" />
+            <HBox alignment="CENTER_LEFT" nodeOrientation="LEFT_TO_RIGHT" prefHeight="40.0" spacing="5.0">
+               <children>
+                  <Label fx:id="lblQName">
+                     <font>
+                        <Font name="System Bold" size="12.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="lblQueryStatus" layoutX="10.0" layoutY="10.0" />
+                  <ProgressIndicator fx:id="progressIndicator" prefHeight="15.0" prefWidth="25.0" visible="false" />
+               </children>
+               <padding>
+                  <Insets right="15.0" />
+               </padding>
+            </HBox>
         </items>
       </ToolBar>
    </bottom>

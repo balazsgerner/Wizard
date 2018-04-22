@@ -1,5 +1,6 @@
 package application.query.musicbrainz;
 
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -35,9 +36,15 @@ public class MusicbrainzQuery extends Query {
   }
 
   @Override
-  protected void fillResultsMap(String searchStr) {
+  protected void fillResultsMap(String searchStr) throws ConnectException {
     recording.search(searchStr);
     List<RecordingResultWs2> resultList = recording.getFirstSearchResultPage();
+
+    MyHttpWSImpl queryWs = (MyHttpWSImpl) recording.getQueryWs();
+    if(queryWs.hasConnectionProlem()) {
+      throw new ConnectException("Cannot connect to web service");
+    }
+
     Iterator<RecordingResultWs2> iterResults = resultList.iterator();
     while (iterResults.hasNext()) {
       Map<String, Object> attributes = new HashMap<>();
@@ -82,7 +89,7 @@ public class MusicbrainzQuery extends Query {
     result = StringUtils.replace(result, "]", ")");
     return result;
   }
-  
+
   @Override
   protected String createSearchStr() {
     String title = formatStr(musicFile.getTitle());

@@ -12,6 +12,7 @@ import com.wrapper.spotify.requests.authorization.client_credentials.ClientCrede
 import com.wrapper.spotify.requests.data.search.simplified.SearchTracksRequest;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,9 +21,12 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import application.Main;
 import application.query.Query;
+import model.MusicFile;
 
 public class SpotifyQuery extends Query {
 
@@ -60,6 +64,13 @@ public class SpotifyQuery extends Query {
     } catch (IOException | SpotifyWebApiException e) {
       e.printStackTrace();
     }
+  }
+  
+  @Override
+  public void performQuery(MusicFile mf) throws ConnectException {
+    Logger.getRootLogger().setLevel(Level.OFF);
+    super.performQuery(mf);
+    Logger.getRootLogger().setLevel(Level.DEBUG);
   }
 
   @Override
