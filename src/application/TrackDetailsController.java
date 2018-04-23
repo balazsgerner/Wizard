@@ -392,15 +392,23 @@ public class TrackDetailsController implements Initializable {
         @Override
         protected Void call() throws Exception {
           initUI();
-          try {
-            performQuery(query);
-          } catch (ConnectException e) {
-            cancel();
-          }
+          performQuery(query);
           return null;
         }
-
       };
+    }
+
+    @Override
+    protected void failed() {
+      showError();
+    }
+
+    private void showError() {
+      Platform.runLater(() -> {
+        lblQueryStatus.getStyleClass().setAll("error");
+        lblQueryStatus.setText("Cannot connect to web service!");
+        progressIndicator.setVisible(false);
+      });
     }
 
     private void initUI() {
@@ -412,20 +420,11 @@ public class TrackDetailsController implements Initializable {
     }
 
     @Override
-    protected void cancelled() {
-      Platform.runLater((() -> {
-        lblQueryStatus.getStyleClass().setAll("error");
-        progressIndicator.setVisible(false);
-        lblQueryStatus.setText("Cannot connect to web service!");
-      }));
-    }
-
-    @Override
     protected void succeeded() {
       Platform.runLater(() -> {
         progressIndicator.setVisible(false);
         lblQueryStatus.getStyleClass().setAll("success");
-        lblQueryStatus.setText("Finished");
+        lblQueryStatus.setText("Finished!");
         refreshUIAfterQuery(query.getName());
       });
     }

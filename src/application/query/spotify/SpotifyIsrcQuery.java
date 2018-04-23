@@ -1,10 +1,12 @@
 package application.query.spotify;
 
+import java.net.ConnectException;
+
 import application.query.Query;
 
 public class SpotifyIsrcQuery extends SpotifyQuery {
 
-  public SpotifyIsrcQuery(Query query) {
+  public SpotifyIsrcQuery(Query query) throws ConnectException {
     super(query);
   }
 

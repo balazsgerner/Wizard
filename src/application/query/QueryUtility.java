@@ -12,12 +12,16 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import application.MainWindowController.QueryTask;
+import org.apache.log4j.Logger;
+
+import application.MainWindowController.QueryService.QueryTask;
 import model.MusicFile;
 
 @XmlRootElement(name = "querymethods")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class QueryUtility {
+
+  public static Logger log = Logger.getLogger(QueryUtility.class);
 
   private static QueryUtility instance = null;
 
@@ -50,16 +54,17 @@ public class QueryUtility {
     Query queryMethod = null;
     try {
       queryMethod = getQueryMethodInstance(query);
+    } catch (NullPointerException | InvocationTargetException e) {
+      throw new ConnectException(e.getMessage());
     } catch (Exception e) {
       e.printStackTrace();
     }
-
     queryMethod.performQuery(musicFile);
-    return queryMethod.getResults();
+    return queryMethod != null ? queryMethod.getResults() : null;
   }
 
-  private Query getQueryMethodInstance(Query query)
-      throws ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+  private Query getQueryMethodInstance(Query query) throws ClassNotFoundException, InstantiationException, IllegalAccessException,
+      NoSuchMethodException, IllegalArgumentException, InvocationTargetException, SecurityException {
     Query queryMethod = queryMethodsByCode.get(query.getCode());
     if (queryMethod == null) {
       Class<? extends Query> queryMethodClass = Class.forName(query.getClassName()).asSubclass(Query.class);
@@ -75,6 +80,9 @@ public class QueryUtility {
     queryTask.updateProgress(0, 100);
     int listSize = musicFiles.size();
     for (int i = 0; i < listSize; i++) {
+      if (queryTask.isCancelled()) {
+        return;
+      }
       MusicFile musicFile = musicFiles.get(i);
       Map<String, Map<String, Object>> res = performQuery(musicFile, query);
       musicFile.setQueryResults(res);

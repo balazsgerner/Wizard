@@ -1,5 +1,5 @@
 .placeHolder {
-	-fx-font-size: 20px;
+	-fx-font-size: 20.0px;
 	-fx-font-weight: bold;
 }
 
@@ -15,5 +15,10 @@
 
 .error {
 	-fx-text-fill: red;
+	-fx-font-weight: bold;
+}
+
+.info {
+	-fx-text-fill: #088A85;
 	-fx-font-weight: bold;
 }

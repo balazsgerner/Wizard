@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.musicbrainz.controller.Recording;
 import org.musicbrainz.model.TagWs2;
 import org.musicbrainz.model.entity.RecordingWs2;
@@ -24,12 +26,13 @@ public class MusicbrainzQuery extends Query {
 
   private Recording recording;
 
-  public MusicbrainzQuery(Query query) {
+  public MusicbrainzQuery(Query query) throws ConnectException {
     super(query);
   }
 
   @Override
   protected void init() {
+    Logger.getLogger("org.musicbrainz.wsxml.impl.JDOMParserWs2").setLevel(Level.ERROR);
     recording = new Recording();
     recording.setQueryWs(new MyHttpWSImpl());
     recording.getSearchFilter().setLimit(LIMIT);
@@ -38,10 +41,13 @@ public class MusicbrainzQuery extends Query {
   @Override
   protected void fillResultsMap(String searchStr) throws ConnectException {
     recording.search(searchStr);
+
+    hideWSErrors();
     List<RecordingResultWs2> resultList = recording.getFirstSearchResultPage();
+    resetErrors();
 
     MyHttpWSImpl queryWs = (MyHttpWSImpl) recording.getQueryWs();
-    if(queryWs.hasConnectionProlem()) {
+    if (queryWs.hasConnectionProblem()) {
       throw new ConnectException("Cannot connect to web service");
     }
 
@@ -74,6 +80,14 @@ public class MusicbrainzQuery extends Query {
 
       results.put(recordingId, attributes);
     }
+  }
+
+  private void resetErrors() {
+    System.setErr(System.err);
+  }
+
+  private void hideWSErrors() {
+    System.err.close();
   }
 
   protected String formatStr(String rawStr) {

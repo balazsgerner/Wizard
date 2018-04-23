@@ -40,13 +40,13 @@ public class Query {
   @XmlTransient
   protected Map<String, Object> params;
 
-  public Query() {
+  public Query() throws ConnectException {
     this.results = new HashMap<>();
     this.params = new HashMap<>();
     init();
   }
 
-  public Query(Query original) {
+  public Query(Query original) throws ConnectException {
     this.name = original.name;
     this.code = original.code;
     this.parameterized = original.parameterized;
@@ -55,7 +55,7 @@ public class Query {
     init();
   }
 
-  protected void init() {
+  protected void init() throws ConnectException {
     // to be overridden
   }
 

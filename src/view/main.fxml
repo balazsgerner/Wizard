@@ -94,13 +94,14 @@
                <children>
                   <HBox fx:id="pnlProgressIndicator" alignment="CENTER_LEFT" spacing="5.0" visible="false">
                      <children>
-                        <Label fx:id="lblQueryName" layoutX="10.0" layoutY="17.0">
+                        <Label fx:id="lblQueryName" layoutX="10.0" layoutY="17.0" prefHeight="30.0">
                            <font>
                               <Font name="System Bold" size="12.0" />
                            </font>
                         </Label>
-                        <Label fx:id="lblQueryStatus" />
-                        <ProgressBar fx:id="queryProgressBar" prefWidth="200.0" progress="0.0" />
+                        <Label fx:id="lblQueryStatus" prefHeight="30.0" />
+                        <ProgressBar fx:id="queryProgressBar" prefHeight="30.0" prefWidth="200.0" progress="0.0" />
+                        <Button fx:id="btnCancelQuery" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#cancelQuery" prefHeight="30.0" prefWidth="20.0" />
                      </children>
                   </HBox>
                   <HBox fx:id="pnlScanIndicator" alignment="CENTER_LEFT">

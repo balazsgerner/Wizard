@@ -3,10 +3,12 @@ package application.query.acoustid;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.ConnectException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,11 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import application.query.Query;
+import application.query.QueryUtility;
 
 public class AcoustidQuery extends Query {
 
@@ -30,8 +34,20 @@ public class AcoustidQuery extends Query {
 
   private String fingerPrint;
 
-  public AcoustidQuery(Query query) {
+  private Properties prop;
+
+  public AcoustidQuery(Query query) throws ConnectException {
     super(query);
+  }
+
+  @Override
+  protected void init() throws ConnectException {
+    try {
+      prop = new Properties();
+      prop.load(getClass().getResourceAsStream("/resources/properties/acoustid.properties"));
+    } catch (IOException e) {
+      Logger.getLogger(QueryUtility.class).error(e);
+    }
   }
 
   @Override
@@ -48,18 +64,16 @@ public class AcoustidQuery extends Query {
       line = br.readLine();
       fingerPrint = line.split("FINGERPRINT=")[1];
     } catch (IOException e) {
-      e.printStackTrace();
+      Logger.getLogger(QueryUtility.class).error(e);
     }
 
     return null;
   }
 
   @Override
-  protected void fillResultsMap(String searchString) {
-    Properties prop = new Properties();
+  protected void fillResultsMap(String searchString) throws ConnectException {
+    HttpResponse<JsonNode> response;
     try {
-      prop.load(getClass().getResourceAsStream("/resources/properties/acoustid.properties"));
-      HttpResponse<JsonNode> response;
       response = Unirest.get(prop.getProperty("acoustid_url")).header("accept", "application/json")
           .queryString("client", prop.getProperty("acoustid_client_key")).queryString("duration", duration).queryString("fingerprint", fingerPrint)
           .queryString("meta", prop.getProperty("acoustid_meta")).asJson();
@@ -103,9 +117,8 @@ public class AcoustidQuery extends Query {
         } catch (JSONException e) {
         }
       }
-
-    } catch (Exception e1) {
-      e1.printStackTrace();
+    } catch (UnirestException e1) {
+      throw new ConnectException(e1.getMessage());
     }
   }
 

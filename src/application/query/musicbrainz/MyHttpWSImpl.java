@@ -106,7 +106,6 @@ public class MyHttpWSImpl extends MyWebServiceWS2 {
       md = executeMethod(method);
     } catch (WebServiceException | IOException e) {
       hasConnectionProblem = true;
-      log.error("Unable to connect to web service!");
     }
     return md;
   }
@@ -215,7 +214,7 @@ public class MyHttpWSImpl extends MyWebServiceWS2 {
     }
   }
 
-  public boolean hasConnectionProlem() {
+  public boolean hasConnectionProblem() {
     return hasConnectionProblem;
   }
   

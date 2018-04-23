@@ -26,7 +26,6 @@ import org.apache.log4j.Logger;
 
 import application.Main;
 import application.query.Query;
-import model.MusicFile;
 
 public class SpotifyQuery extends Query {
 
@@ -44,12 +43,15 @@ public class SpotifyQuery extends Query {
 
   private int imgNum;
 
-  public SpotifyQuery(Query query) {
+  public SpotifyQuery(Query query) throws ConnectException {
     super(query);
   }
 
   @Override
-  protected void init() {
+  protected void init() throws ConnectException {
+    Logger.getLogger("org.apache.http.impl.conn.PoolingHttpClientConnectionManager").setLevel(Level.ERROR);
+    
+    
     prop = new Properties();
     try {
       prop.load(Main.class.getResourceAsStream("/resources/properties/spotify.properties"));
@@ -62,19 +64,19 @@ public class SpotifyQuery extends Query {
       ClientCredentials clientCredentials = clientCredentialsRequest.execute();
       spotifyApi.setAccessToken(clientCredentials.getAccessToken());
     } catch (IOException | SpotifyWebApiException e) {
-      e.printStackTrace();
+        throw new ConnectException("Cannot connect to web service!");
     }
   }
   
-  @Override
-  public void performQuery(MusicFile mf) throws ConnectException {
-    Logger.getRootLogger().setLevel(Level.OFF);
-    super.performQuery(mf);
-    Logger.getRootLogger().setLevel(Level.DEBUG);
-  }
+//  @Override
+//  public void performQuery(MusicFile mf) throws ConnectException {
+//    Logger.getRootLogger().setLevel(Level.OFF);
+//    super.performQuery(mf);
+//    Logger.getRootLogger().setLevel(Level.DEBUG);
+//  }
 
   @Override
-  protected void fillResultsMap(String searchString) {
+  protected void fillResultsMap(String searchString) throws ConnectException {
     SearchTracksRequest trackRequest = spotifyApi.searchTracks(searchString).offset(OFFSET).limit(LIMIT).build();
     try {
       Paging<Track> paging = trackRequest.execute();
@@ -119,7 +121,7 @@ public class SpotifyQuery extends Query {
         results.put(trackId, attributes);
       }
     } catch (SpotifyWebApiException | IOException e) {
-      e.printStackTrace();
+       throw new ConnectException(e.getMessage());
     }
 
   }
