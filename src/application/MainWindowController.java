@@ -3,7 +3,6 @@ package application;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.ConnectException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -74,6 +73,9 @@ public class MainWindowController implements Initializable {
   private Button btnOpenLibrary;
 
   @FXML
+  private Button btnCancelQuery;
+
+  @FXML
   private MenuButton btnQueryAll;
 
   @FXML
@@ -102,6 +104,8 @@ public class MainWindowController implements Initializable {
 
   private OpenLibraryService openLibraryService;
 
+  private QueryService queryService;
+
   @FXML
   private void openLibrary() {
     DirectoryChooser chooser = new DirectoryChooser();
@@ -117,19 +121,17 @@ public class MainWindowController implements Initializable {
       txtFilter.setDisable(true);
 
       openLibraryService = getOpenLibraryService(directory);
-
       openLibraryService.restart();
-      scanProgressIndicator.progressProperty().bind(openLibraryService.progressProperty());
     }
   }
 
   private OpenLibraryService getOpenLibraryService(File directory) {
     if (openLibraryService == null) {
-      openLibraryService = new OpenLibraryService(directory);
+      return new OpenLibraryService(directory);
     } else {
       openLibraryService.setDirectory(directory);
+      return openLibraryService;
     }
-    return openLibraryService;
   }
 
   private void scanLibrary(File library) {
@@ -174,14 +176,19 @@ public class MainWindowController implements Initializable {
     initBtnQueryAll();
     filteredModel = new FilteredList<>(model);
     musicDetails.setItems(filteredModel);
-
+    
     musicDetails.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
     extensionColumn.setVisible(false);
     pathColumn.setVisible(false);
     musicDetails.getColumns().addAll(extensionColumn, pathColumn, bandColumn, titleColumn, albumColumn, yearColumn, genreColumn);
     musicDetails.getColumns().forEach(c -> c.setSortable(true));
 
+    InputStream url = getClass().getResourceAsStream("/resources/images/details.png");
+    ImageView iv = new ImageView(new Image(url));
+    iv.setFitHeight(24);
+    iv.setPreserveRatio(true);
+    
+    btnTrackDetails.setGraphic(iv);
     btnTrackDetails.setOnAction(e -> loadTrackDetailView(musicDetails.getSelectionModel().getSelectedItem()));
     musicDetails.setRowFactory(createRowFactory());
 
@@ -202,9 +209,23 @@ public class MainWindowController implements Initializable {
     scanProgressIndicator.managedProperty().bind(scanProgressIndicator.visibleProperty());
     pnlProgressIndicator.managedProperty().bind(pnlProgressIndicator.visibleProperty());
     queryProgressBar.managedProperty().bind(queryProgressBar.visibleProperty());
+    btnCancelQuery.managedProperty().bind(btnCancelQuery.visibleProperty());
+
+    InputStream url = getClass().getResourceAsStream("/resources/images/cancel.png");
+    btnCancelQuery.setGraphic(new ImageView(new Image(url)));
+  }
+
+  @FXML
+  private void cancelQuery() {
+    queryService.cancel();
   }
 
   private void initBtnQueryAll() {
+    InputStream url = getClass().getResourceAsStream("/resources/images/query.png");
+    ImageView iv = new ImageView(new Image(url));
+    iv.setFitHeight(24);
+    iv.setPreserveRatio(true);
+    btnQueryAll.setGraphic(iv);
     ListChangeListener<MusicFile> modelEmptyListener = new ListChangeListener<MusicFile>() {
 
       @Override
@@ -224,24 +245,21 @@ public class MainWindowController implements Initializable {
       MenuItem menuItem = new MenuItem(query.getName());
       btnQueryAll.getItems().add(menuItem);
       menuItem.setOnAction(e -> {
-        pnlScanIndicator.setVisible(false);
-        pnlProgressIndicator.setVisible(true);
-        queryProgressBar.setVisible(true);
-        Service<Void> queryService = new Service<>() {
-
-          @Override
-          protected Task<Void> createTask() {
-            Task<Void> queryTask = new QueryTask(query);
-            queryProgressBar.progressProperty().bind(queryTask.progressProperty());
-            return queryTask;
-          }
-        };
-        lblQueryName.setText(query.getName() + " query");
-        queryService.start();
+        queryService = getQueryService(query);
+        queryService.restart();
       });
 
     });
 
+  }
+
+  private QueryService getQueryService(Query query) {
+    if (queryService == null) {
+      return new QueryService(query);
+    } else {
+      queryService.setQuery(query);
+      return queryService;
+    }
   }
 
   private Callback<TableView<MusicFile>, TableRow<MusicFile>> createRowFactory() {
@@ -296,10 +314,105 @@ public class MainWindowController implements Initializable {
       paramBean.musicFile = selectedFile;
       trackDetailsLoader.setController(new TrackDetailsController(root, paramBean));
       Parent trackDetailsRoot = trackDetailsLoader.load();
+      pnlProgressIndicator.setVisible(false);
       root.getScene().setRoot(trackDetailsRoot);
     } catch (IOException e1) {
       e1.printStackTrace();
     }
+  }
+
+  public final class QueryService extends Service<Void> {
+
+    private Query query;
+
+    private QueryService(Query query) {
+      this.query = query;
+    }
+
+    @Override
+    protected Task<Void> createTask() {
+      QueryTask queryTask = new QueryTask();
+      Platform.runLater(() -> initUI());
+      queryProgressBar.progressProperty().bind(this.progressProperty());
+      return queryTask;
+    }
+
+    public Query getQuery() {
+      return query;
+    }
+
+    public void setQuery(Query query) {
+      this.query = query;
+    }
+
+    private void initUI() {
+      pnlScanIndicator.setVisible(false);
+      pnlProgressIndicator.setVisible(true);
+      queryProgressBar.setVisible(true);
+      btnCancelQuery.setVisible(true);
+      lblQueryName.setText(query.getName() + " query");
+      lblQueryStatus.setText("");
+      lblQueryStatus.getStyleClass().setAll("default");
+    }
+
+    public class QueryTask extends Task<Void> {
+
+      @Override
+      protected Void call() throws Exception {
+        QueryUtility.getInstance().performManyQueries(model, getQuery(), this);
+        if (isCancelled()) {
+          cancelled();
+        }
+        return null;
+      }
+
+      @Override
+      protected void failed() {
+        QueryUtility.log.error("Cannot connect to web service!", getException());
+        showError();
+      }
+
+      @Override
+      protected void cancelled() {
+        Platform.runLater(() -> {
+          lblQueryStatus.getStyleClass().setAll("info");
+          lblQueryStatus.setText("Cancelled!");
+          queryProgressBar.setVisible(false);
+          btnCancelQuery.setVisible(false);
+        });
+
+      }
+
+      @Override
+      protected void succeeded() {
+        Platform.runLater(() -> {
+          lblQueryStatus.getStyleClass().setAll("success");
+          lblQueryStatus.setText("Finished!");
+          queryProgressBar.setVisible(false);
+          btnCancelQuery.setVisible(false);
+        });
+      }
+
+      private void showError() {
+        Platform.runLater(() -> {
+          lblQueryStatus.getStyleClass().setAll("error");
+          lblQueryStatus.setText("Cannot connect to web service!");
+          queryProgressBar.setVisible(false);
+          btnCancelQuery.setVisible(false);
+        });
+      }
+
+      @Override
+      public void updateProgress(long workDone, long max) {
+        super.updateProgress(workDone, max);
+        Platform.runLater(() -> {
+          int progress = (int) (queryProgressBar.getProgress() * 100);
+          lblQueryStatus.setText(progress + "%");
+        });
+      }
+
+    }
+
   }
 
   private final class OpenLibraryService extends Service<Void> {
@@ -308,6 +421,7 @@ public class MainWindowController implements Initializable {
 
     private OpenLibraryService(File directory) {
       this.directory = directory;
+      scanProgressIndicator.progressProperty().bind(progressProperty());
     }
 
     public void setDirectory(File directory) {
@@ -333,57 +447,6 @@ public class MainWindowController implements Initializable {
         }
       };
     }
-  }
-
-  public class QueryTask extends Task<Void> {
-
-    private Query query;
-
-    public QueryTask(Query q) {
-      this.query = q;
-    }
-
-    @Override
-    protected Void call() throws Exception {
-      try {
-        QueryUtility.getInstance().performManyQueries(model, query, this);
-      } catch (ConnectException e) {
-        showError(e);
-        cancel();
-      }
-      return null;
-    }
-
-    private void showError(Exception e) {
-      Platform.runLater(() -> {
-        lblQueryStatus.getStyleClass().setAll("error");
-        lblQueryStatus.setText("Cannot connect to web service!");
-        queryProgressBar.setVisible(false);
-      });
-
-    }
-
-    @Override
-    public void updateProgress(long workDone, long max) {
-      super.updateProgress(workDone, max);
-      Platform.runLater(() -> {
-        int progress = (int) (queryProgressBar.getProgress() * 100);
-        lblQueryStatus.getStyleClass().setAll("default");
-        lblQueryStatus.setText(String.format("%3s%s", progress, "%"));
-      });
-    }
-
-    @Override
-    protected void succeeded() {
-      Platform.runLater(() -> {
-
-        super.succeeded();
-        lblQueryStatus.getStyleClass().setAll("success");
-        lblQueryStatus.setText("Finished");
-        queryProgressBar.setVisible(false);
-      });
-    }
-
   }
 
 }

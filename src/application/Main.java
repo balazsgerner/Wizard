@@ -59,8 +59,6 @@ public class Main extends Application {
     BasicConfigurator.configure();
     Logger.getRootLogger().setLevel(org.apache.log4j.Level.ERROR);
     AudioFile.logger.setLevel(Level.OFF);
-//    System.err.close();
-//    System.setErr(System.out);
   }
 
   public static void main(String[] args) {

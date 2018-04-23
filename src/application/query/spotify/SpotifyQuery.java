@@ -3,6 +3,8 @@ package application.query.spotify;
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
+import com.wrapper.spotify.exceptions.detailed.BadGatewayException;
+import com.wrapper.spotify.exceptions.detailed.TooManyRequestsException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Image;
@@ -26,12 +28,15 @@ import org.apache.log4j.Logger;
 
 import application.Main;
 import application.query.Query;
+import application.query.QueryUtility;
 
 public class SpotifyQuery extends Query {
 
   private static final int LIMIT = 10;
 
   private static final int OFFSET = 0;
+
+  private static final int DEFAULT_RETRY_AFTER = 3;
 
   public static final String CODE = "SPOTIFY";
 
@@ -50,8 +55,7 @@ public class SpotifyQuery extends Query {
   @Override
   protected void init() throws ConnectException {
     Logger.getLogger("org.apache.http.impl.conn.PoolingHttpClientConnectionManager").setLevel(Level.ERROR);
-    
-    
+
     prop = new Properties();
     try {
       prop.load(Main.class.getResourceAsStream("/resources/properties/spotify.properties"));
@@ -64,16 +68,9 @@ public class SpotifyQuery extends Query {
       ClientCredentials clientCredentials = clientCredentialsRequest.execute();
       spotifyApi.setAccessToken(clientCredentials.getAccessToken());
     } catch (IOException | SpotifyWebApiException e) {
-        throw new ConnectException("Cannot connect to web service!");
+      throw new ConnectException("Cannot connect to web service!");
     }
   }
-  
-//  @Override
-//  public void performQuery(MusicFile mf) throws ConnectException {
-//    Logger.getRootLogger().setLevel(Level.OFF);
-//    super.performQuery(mf);
-//    Logger.getRootLogger().setLevel(Level.DEBUG);
-//  }
 
   @Override
   protected void fillResultsMap(String searchString) throws ConnectException {
@@ -120,10 +117,32 @@ public class SpotifyQuery extends Query {
         attributes.put("track number", track.getTrackNumber());
         results.put(trackId, attributes);
       }
+    } catch (TooManyRequestsException e) {
+      int retryAfter = e.getRetryAfter();
+      QueryUtility.log.error("Too many requests was sent to the server! Retry After: " + retryAfter, e);
+      retry(retryAfter, searchString);
+    } catch (BadGatewayException e) {
+      QueryUtility.log.error("Bad Gateway!", e);
+      retry(0, searchString);
     } catch (SpotifyWebApiException | IOException e) {
-       throw new ConnectException(e.getMessage());
+      throw new ConnectException(e.getMessage());
     }
 
+  }
+
+  /**
+   * Retry calling the web service. Is needed when e.g. TooManyRequestException or BadGateway exception occurs.
+   * 
+   * @param waitSec - How many seconds until next try
+   * @param searchString - search params
+   * @throws ConnectException
+   */
+  private void retry(Integer waitSec, String searchString) throws ConnectException {
+    try {
+      Thread.sleep((waitSec != null ? waitSec : DEFAULT_RETRY_AFTER) * 1000);
+      fillResultsMap(searchString);
+    } catch (InterruptedException e1) {
+    }
   }
 
   @Override
