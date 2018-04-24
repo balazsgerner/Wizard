@@ -1,4 +1,4 @@
-package application;
+package application.controller;
 
 import java.io.ByteArrayInputStream;
 import java.net.ConnectException;
@@ -130,17 +130,17 @@ public class TrackDetailsController implements Initializable {
 
   private Parent callerWindowRoot;
 
-  private TrackDetailsParamBean paramBean;
-
   private QueryResult results;
 
   private Image originalImg;
 
   private QueryService queryService;
 
-  public TrackDetailsController(Parent callerWindowRoot, TrackDetailsParamBean parambean) {
+  private MusicFile musicFile;
+
+  public TrackDetailsController(Parent callerWindowRoot, MusicFile musicFile) {
     this.callerWindowRoot = callerWindowRoot;
-    this.paramBean = parambean;
+    this.musicFile = musicFile;
   }
 
   @Override
@@ -175,12 +175,12 @@ public class TrackDetailsController implements Initializable {
   }
 
   private void initTblOriginal() {
-    Map<String, Object> attibuteMap = paramBean.musicFile.getAttibuteMap();
+    Map<String, Object> attibuteMap = musicFile.getAttibuteMap();
     tblOriginal.setItems(FXCollections.observableArrayList(attibuteMap.entrySet()));
   }
 
   private void initTblResults() {
-    MusicFile selectedFile = paramBean.musicFile;
+    MusicFile selectedFile = musicFile;
     QueryResult queryResults = selectedFile.getLatestQueryResult();
     if (queryResults != null) {
       String lastQueryName = QueryUtility.getInstance().getQueryNameByCode(selectedFile.getLastQueryCode());
@@ -301,8 +301,8 @@ public class TrackDetailsController implements Initializable {
     if (query.isParametrized()) {
       query.setParam("isrc", txtIsrc.getText());
     }
-    QueryUtility.getInstance().performQuery(paramBean.musicFile, query);
-    results = paramBean.musicFile.getLatestQueryResult();
+    QueryUtility.getInstance().performQuery(musicFile, query);
+    results = musicFile.getLatestQueryResult();
   }
 
   private void refreshValuesInTable() {
@@ -331,7 +331,7 @@ public class TrackDetailsController implements Initializable {
   }
 
   private void setAlbumData() {
-    MusicFile selectedItem = paramBean.musicFile;
+    MusicFile selectedItem = musicFile;
     String album = validateData(selectedItem.getAlbum());
     lblAlbum.setText(album);
     lblAlbum.setTooltip(new Tooltip(album));
@@ -348,7 +348,7 @@ public class TrackDetailsController implements Initializable {
   }
 
   private void setCurrentTrackData() {
-    MusicFile selectedItem = paramBean.musicFile;
+    MusicFile selectedItem = musicFile;
     String path = validateData(selectedItem.getPath());
     lblPath.setText(path);
     lblPath.setTooltip(new Tooltip(path));
@@ -370,7 +370,7 @@ public class TrackDetailsController implements Initializable {
   }
 
   private String validateData(String rawData) {
-    return rawData == null || rawData.isEmpty() ? "- (Unknown)" : rawData;
+    return rawData == null || rawData.isEmpty() ? "(Unknown)" : rawData;
   }
 
   @FXML

@@ -8,12 +8,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.musicbrainz.webservice.DefaultWebServiceWs2;
 import org.musicbrainz.webservice.WebServiceException;
 import org.musicbrainz.wsxml.MbXMLException;
 import org.musicbrainz.wsxml.element.Metadata;
 
 public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
+
+  private static Logger log = Logger.getLogger(MyWebServiceWS2.class);
 
   private String host;
 
@@ -29,9 +32,8 @@ public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
       host = prop.getProperty("server_host");
       port = prop.getProperty("server_port");
       protocol = prop.getProperty("server_protocol");
-
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("Error while initializing web service!", e);
     }
   }
 

@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.MainWindowController">
+<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.MainWindowController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
@@ -74,6 +74,11 @@
                               <Insets left="5.0" />
                            </HBox.margin>
                         </MenuButton>
+                        <Button fx:id="btnSaveResults" disable="true" maxHeight="34.0" mnemonicParsing="false" onAction="#saveAllResultsToDatabase" prefHeight="34.0" text="Save results">
+                           <HBox.margin>
+                              <Insets left="5.0" />
+                           </HBox.margin>
+                        </Button>
                      </children>
                   </HBox>
               </items>
@@ -104,7 +109,7 @@
                         <Button fx:id="btnCancelQuery" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#cancelQuery" prefHeight="30.0" prefWidth="20.0" />
                      </children>
                   </HBox>
-                  <HBox fx:id="pnlScanIndicator" alignment="CENTER_LEFT">
+                  <HBox fx:id="pnlScanIndicator" alignment="CENTER_LEFT" spacing="5.0">
                      <children>
                         <Label fx:id="trackNumber">
                            <font>

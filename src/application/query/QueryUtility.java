@@ -14,7 +14,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.log4j.Logger;
 
-import application.MainWindowController.QueryService.QueryTask;
+import application.controller.MainWindowController.QueryService.QueryTask;
 import model.MusicFile;
 
 @XmlRootElement(name = "querymethods")
@@ -61,9 +61,14 @@ public class QueryUtility {
     } catch (NullPointerException | InvocationTargetException e) {
       throw new ConnectException(e.getMessage());
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Error while performing query for:" + musicFile.toString() + "!", e);
     }
-    queryMethod.performQuery(musicFile);
+    try {
+      queryMethod.performQuery(musicFile);
+    } catch (ConnectException e) {
+      log.error("Cannot connect to web service!", e);
+      throw e;
+    }
   }
 
   private Query getQueryMethodInstance(Query query) throws ClassNotFoundException, InstantiationException, IllegalAccessException,

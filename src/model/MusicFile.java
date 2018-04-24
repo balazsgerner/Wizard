@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.log4j.Logger;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.FieldKey;
@@ -19,6 +20,8 @@ import application.query.QueryResult;
 
 public class MusicFile {
 
+  private static Logger log = Logger.getLogger(MusicFile.class);
+
   private AudioFile file;
 
   private Tag tag;
@@ -26,13 +29,15 @@ public class MusicFile {
   private Map<String, QueryResult> queryResultMap;
 
   private String lastQueryCode;
+  
+  private boolean dirty = false;
 
   public MusicFile(File file) {
     try {
       this.file = AudioFileIO.read(file);
       this.tag = this.file.getTag();
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Error while loading audioFile!", e);
     }
   }
 
@@ -119,8 +124,7 @@ public class MusicFile {
       return name.startsWith("get") && !(name.equals("getAttibuteMap") || name.equals("getArtwork"));
     });
 
-    listOfGetters.filter(p -> !p.getName().toLowerCase().contains("query"))
-    .forEach(g -> {
+    listOfGetters.filter(p -> !p.getName().toLowerCase().contains("query")).forEach(g -> {
 
       String attributeName = g.getName().split("get")[1].toLowerCase();
       attributeName = attributeName.substring(0, 1).toUpperCase() + attributeName.substring(1);
@@ -128,7 +132,7 @@ public class MusicFile {
         Object attributeValue = g.invoke(this);
         attributeMap.put(attributeName, attributeValue);
       } catch (Exception e) {
-        e.printStackTrace();
+        log.error("Error while creating attributeMap!", e);
       }
     });
     return attributeMap;
@@ -151,6 +155,7 @@ public class MusicFile {
       queryResultMap = new HashMap<>();
     }
     queryResultMap.put(queryCode, result);
+    dirty = true;
   }
 
   public String getLastQueryCode() {
@@ -163,6 +168,16 @@ public class MusicFile {
 
   public QueryResult getLatestQueryResult() {
     return lastQueryCode == null ? null : queryResultMap.get(lastQueryCode);
+  }
+
+  
+  public boolean isDirty() {
+    return dirty;
+  }
+
+  
+  public void setDirty(boolean dirty) {
+    this.dirty = dirty;
   }
 
 }

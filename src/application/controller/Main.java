@@ -1,4 +1,4 @@
-package application;
+package application.controller;
 
 import java.util.Properties;
 import java.util.logging.Level;
@@ -16,54 +16,58 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class Main extends Application {
 
+  private static Logger log = Logger.getLogger(Application.class);
+
+  private Properties prop;
+
   @Override
   public void start(Stage primaryStage) {
     try {
-      Parent root = FXMLLoader.load(getClass().getResource("/view/main.fxml"));
-      Scene scene = new Scene(root, 800, 600);
-      scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-
-      Properties prop = new Properties();
+      prop = new Properties();
       prop.load(getClass().getResourceAsStream("/resources/properties/application.properties"));
 
+      disableWarning();
+      initQueryMethods();
+
+      Parent root = FXMLLoader.load(getClass().getResource(prop.getProperty("mainwindow.view.url")));
+      Scene scene = new Scene(root);
+      scene.getStylesheets().add(getClass().getResource(prop.getProperty("styles.url")).toExternalForm());
+
       primaryStage.setTitle(prop.getProperty("application.title"));
-      primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/resources/images/icon.png")));
+      primaryStage.getIcons().add(ImageLoader.getInstance().loadImage("icon"));
       primaryStage.setScene(scene);
       primaryStage.setMaximized(true);
       primaryStage.show();
     } catch (Exception e) {
-      e.printStackTrace();
+      log.fatal("Fatal error while starting application!", e);
     }
   }
 
-  private static void initQueryMethods() {
+  private void initQueryMethods() {
     try {
       QueryUtility instance = QueryUtility.getInstance();
       JAXBContext jaxbContext;
       jaxbContext = JAXBContext.newInstance(QueryUtility.class);
       Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-      QueryUtility qm = (QueryUtility) jaxbUnmarshaller.unmarshal(Main.class.getResource("/resources/xml/query_methods.xml"));
+      QueryUtility qm = (QueryUtility) jaxbUnmarshaller.unmarshal(getClass().getResource(prop.getProperty("querymethods.url")));
       instance.setQueryMethods(qm.getQueryMethods());
     } catch (JAXBException e) {
-      e.printStackTrace();
+      log.fatal("Fatal error while loading querymethods.xml!", e);
     }
 
   }
 
-  public static void disableWarning() {
+  private void disableWarning() {
     BasicConfigurator.configure();
-    Logger.getRootLogger().setLevel(org.apache.log4j.Level.ERROR);
+    Logger.getRootLogger().setLevel(org.apache.log4j.Level.WARN);
     AudioFile.logger.setLevel(Level.OFF);
   }
 
   public static void main(String[] args) {
-    disableWarning();
-    initQueryMethods();
     launch(args);
   }
 

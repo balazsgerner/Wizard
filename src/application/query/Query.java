@@ -10,12 +10,16 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.log4j.Logger;
+
 import model.MusicFile;
 
 @XmlRootElement(name = "query")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Query {
 
+  protected static Logger log = Logger.getLogger(Query.class);
+  
   @XmlElement
   protected String name;
 

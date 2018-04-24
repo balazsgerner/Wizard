@@ -4,6 +4,7 @@ import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.exceptions.detailed.BadGatewayException;
+import com.wrapper.spotify.exceptions.detailed.NotFoundException;
 import com.wrapper.spotify.exceptions.detailed.TooManyRequestsException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
@@ -23,10 +24,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
-import application.Main;
+import application.controller.Main;
 import application.query.Query;
 import application.query.QueryUtility;
 
@@ -48,17 +47,21 @@ public class SpotifyQuery extends Query {
 
   private int imgNum;
 
+  private int errorNum = 0;
+
   public SpotifyQuery(Query query) throws ConnectException {
     super(query);
   }
 
   @Override
   protected void init() throws ConnectException {
-    Logger.getLogger("org.apache.http.impl.conn.PoolingHttpClientConnectionManager").setLevel(Level.ERROR);
-
     prop = new Properties();
     try {
-      prop.load(Main.class.getResourceAsStream("/resources/properties/spotify.properties"));
+      try {
+        prop.load(Main.class.getResourceAsStream("/resources/properties/spotify.properties"));
+      } catch (IOException e) {
+        log.error("Error while loading properties!", e);
+      }
 
       String clientId = prop.getProperty("client_id");
       String clientSecret = prop.getProperty("client_secret");
@@ -67,7 +70,7 @@ public class SpotifyQuery extends Query {
 
       ClientCredentials clientCredentials = clientCredentialsRequest.execute();
       spotifyApi.setAccessToken(clientCredentials.getAccessToken());
-    } catch (IOException | SpotifyWebApiException e) {
+    } catch (SpotifyWebApiException | IOException e) {
       throw new ConnectException("Cannot connect to web service!");
     }
   }
@@ -124,6 +127,9 @@ public class SpotifyQuery extends Query {
     } catch (BadGatewayException e) {
       QueryUtility.log.error("Bad Gateway!", e);
       retry(0, searchString);
+    } catch (NotFoundException e) {
+      log.warn("#" + (errorNum++) + " Track not found!\n"
+          + String.format("%17s%s%n%17s%s%n%17s%s%n%17s%s", "", "Search string: ", "", searchString, "", "MusicFile: ", "", musicFile.toString()));
     } catch (SpotifyWebApiException | IOException e) {
       throw new ConnectException(e.getMessage());
     }

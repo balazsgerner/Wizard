@@ -22,3 +22,7 @@
 	-fx-text-fill: #088A85;
 	-fx-font-weight: bold;
 }
+
+.bold {
+	-fx-font-weight: bold;
+}
