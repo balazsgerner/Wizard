@@ -50,7 +50,11 @@ public class QueryUtility {
     this.queryMethods = queryMethods;
   }
 
-  public Map<String, Map<String, Object>> performQuery(MusicFile musicFile, Query query) throws ConnectException {
+  public String getQueryNameByCode(String code) {
+    return queryMethodsByCode.get(code).getName();
+  }
+
+  public void performQuery(MusicFile musicFile, Query query) throws ConnectException {
     Query queryMethod = null;
     try {
       queryMethod = getQueryMethodInstance(query);
@@ -60,7 +64,6 @@ public class QueryUtility {
       e.printStackTrace();
     }
     queryMethod.performQuery(musicFile);
-    return queryMethod != null ? queryMethod.getResults() : null;
   }
 
   private Query getQueryMethodInstance(Query query) throws ClassNotFoundException, InstantiationException, IllegalAccessException,
@@ -84,9 +87,7 @@ public class QueryUtility {
         return;
       }
       MusicFile musicFile = musicFiles.get(i);
-      Map<String, Map<String, Object>> res = performQuery(musicFile, query);
-      musicFile.setQueryResults(res);
-      musicFile.setLastQueryName(query.getName());
+      performQuery(musicFile, query);
       queryTask.updateProgress(i, listSize);
     }
 

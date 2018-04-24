@@ -12,6 +12,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import application.query.Query;
+import application.query.QueryResult;
 import application.query.QueryUtility;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -131,7 +132,7 @@ public class TrackDetailsController implements Initializable {
 
   private TrackDetailsParamBean paramBean;
 
-  private Map<String, Map<String, Object>> results;
+  private QueryResult results;
 
   private Image originalImg;
 
@@ -180,9 +181,9 @@ public class TrackDetailsController implements Initializable {
 
   private void initTblResults() {
     MusicFile selectedFile = paramBean.musicFile;
-    Map<String, Map<String, Object>> queryResults = selectedFile.getQueryResults();
+    QueryResult queryResults = selectedFile.getLatestQueryResult();
     if (queryResults != null) {
-      String lastQueryName = selectedFile.getLastQueryName();
+      String lastQueryName = QueryUtility.getInstance().getQueryNameByCode(selectedFile.getLastQueryCode());
       results = queryResults;
       Platform.runLater(() -> refreshUIAfterQuery(lastQueryName));
     }
@@ -300,7 +301,8 @@ public class TrackDetailsController implements Initializable {
     if (query.isParametrized()) {
       query.setParam("isrc", txtIsrc.getText());
     }
-    results = QueryUtility.getInstance().performQuery(paramBean.musicFile, query);
+    QueryUtility.getInstance().performQuery(paramBean.musicFile, query);
+    results = paramBean.musicFile.getLatestQueryResult();
   }
 
   private void refreshValuesInTable() {

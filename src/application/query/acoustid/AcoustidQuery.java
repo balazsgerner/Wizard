@@ -109,7 +109,7 @@ public class AcoustidQuery extends Query {
               try {
                 recordingData.put("recording title", recording.getString("title"));
               } finally {
-                results.put(recordingId, recordingData);
+                result.put(recordingId, recordingData);
               }
             }
           }

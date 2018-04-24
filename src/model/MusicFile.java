@@ -15,15 +15,17 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
 
+import application.query.QueryResult;
+
 public class MusicFile {
 
   private AudioFile file;
 
   private Tag tag;
 
-  private Map<String, Map<String, Object>> queryResults;
+  private Map<String, QueryResult> queryResultMap;
 
-  private String lastQueryName;
+  private String lastQueryCode;
 
   public MusicFile(File file) {
     try {
@@ -117,7 +119,9 @@ public class MusicFile {
       return name.startsWith("get") && !(name.equals("getAttibuteMap") || name.equals("getArtwork"));
     });
 
-    listOfGetters.forEach(g -> {
+    listOfGetters.filter(p -> !p.getName().toLowerCase().contains("query"))
+    .forEach(g -> {
+
       String attributeName = g.getName().split("get")[1].toLowerCase();
       attributeName = attributeName.substring(0, 1).toUpperCase() + attributeName.substring(1);
       try {
@@ -130,20 +134,35 @@ public class MusicFile {
     return attributeMap;
   }
 
-  public Map<String, Map<String, Object>> getQueryResults() {
-    return queryResults;
+  public Map<String, QueryResult> getAllQueryResults() {
+    return queryResultMap;
   }
 
-  public void setQueryResults(Map<String, Map<String, Object>> queryResults) {
-    this.queryResults = queryResults;
+  public void setAllQueryResults(Map<String, QueryResult> queryResults) {
+    this.queryResultMap = queryResults;
   }
 
-  public String getLastQueryName() {
-    return lastQueryName;
+  public QueryResult getQueryResult(String queryCode) {
+    return queryResultMap.get(queryCode);
   }
 
-  public void setLastQueryName(String lastQueryName) {
-    this.lastQueryName = lastQueryName;
+  public void setQueryResult(String queryCode, QueryResult result) {
+    if (queryResultMap == null) {
+      queryResultMap = new HashMap<>();
+    }
+    queryResultMap.put(queryCode, result);
+  }
+
+  public String getLastQueryCode() {
+    return lastQueryCode;
+  }
+
+  public void setLastQueryCode(String lastQueryCode) {
+    this.lastQueryCode = lastQueryCode;
+  }
+
+  public QueryResult getLatestQueryResult() {
+    return lastQueryCode == null ? null : queryResultMap.get(lastQueryCode);
   }
 
 }

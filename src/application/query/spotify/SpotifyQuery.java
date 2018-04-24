@@ -115,7 +115,7 @@ public class SpotifyQuery extends Query {
         attributes.put("track id", trackId);
         attributes.put("title", track.getName());
         attributes.put("track number", track.getTrackNumber());
-        results.put(trackId, attributes);
+        result.put(trackId, attributes);
       }
     } catch (TooManyRequestsException e) {
       int retryAfter = e.getRetryAfter();

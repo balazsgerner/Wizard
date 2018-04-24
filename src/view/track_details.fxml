@@ -38,12 +38,12 @@
          <children>
             <GridPane hgap="5.0" style="-fx-border-style: solid; -fx-border-width: 0 0 1px 0;" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
               <columnConstraints>
-                <ColumnConstraints hgrow="ALWAYS" />
+                <ColumnConstraints hgrow="ALWAYS" minWidth="50.0" />
                   <ColumnConstraints hgrow="ALWAYS" minWidth="49.0" />
                   <ColumnConstraints hgrow="SOMETIMES" />
-                  <ColumnConstraints halignment="LEFT" hgrow="NEVER" minWidth="10.0" />
+                  <ColumnConstraints halignment="LEFT" hgrow="NEVER" minWidth="200.0" />
                   <ColumnConstraints hgrow="NEVER" maxWidth="10.0" minWidth="10.0" prefWidth="10.0" />
-                <ColumnConstraints halignment="RIGHT" hgrow="NEVER" />
+                <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="-Infinity" />
               </columnConstraints>
               <rowConstraints>
                   <RowConstraints vgrow="ALWAYS" />
@@ -54,12 +54,12 @@
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Label fx:id="lblArtist" text="Artist" GridPane.columnSpan="5" GridPane.rowIndex="1">
+                  <Label fx:id="lblArtist" text="Artist" GridPane.columnSpan="6" GridPane.rowIndex="1">
                      <font>
                         <Font name="System Bold" size="20.0" />
                      </font>
                   </Label>
-                  <Label fx:id="lblTitle" text="Title" GridPane.columnSpan="5" GridPane.rowIndex="2">
+                  <Label fx:id="lblTitle" text="Title" GridPane.columnSpan="6" GridPane.rowIndex="2">
                      <font>
                         <Font size="20.0" />
                      </font>
@@ -87,8 +87,8 @@
                   <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="3" GridPane.valignment="BOTTOM">
                      <children>
                         <Label alignment="BOTTOM_LEFT" minWidth="25.0" text="ISRC" />
-                        <TextField fx:id="txtIsrc" alignment="BOTTOM_LEFT" disable="true" HBox.hgrow="ALWAYS" />
-                        <MenuButton fx:id="btnLookukIsrc" disable="true" mnemonicParsing="false" text="Lookup ISRC..." />
+                        <TextField fx:id="txtIsrc" alignment="BOTTOM_LEFT" disable="true" minWidth="50.0" HBox.hgrow="ALWAYS" />
+                        <MenuButton fx:id="btnLookukIsrc" disable="true" minWidth="-Infinity" mnemonicParsing="false" text="Lookup ISRC..." />
                      </children>
                   </HBox>
                </children>

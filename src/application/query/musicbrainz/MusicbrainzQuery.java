@@ -78,7 +78,7 @@ public class MusicbrainzQuery extends Query {
         attributes.put(releaseStr + " country", rel.getCountryId());
       }
 
-      results.put(recordingId, attributes);
+      result.put(recordingId, attributes);
     }
   }
 

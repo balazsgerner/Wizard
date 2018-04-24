@@ -32,7 +32,7 @@ public class Query {
   protected String className;
 
   @XmlTransient
-  protected Map<String, Map<String, Object>> results;
+  protected QueryResult result;
 
   @XmlTransient
   protected MusicFile musicFile;
@@ -41,7 +41,7 @@ public class Query {
   protected Map<String, Object> params;
 
   public Query() throws ConnectException {
-    this.results = new HashMap<>();
+    this.result = new QueryResult();
     this.params = new HashMap<>();
     init();
   }
@@ -61,9 +61,11 @@ public class Query {
 
   public void performQuery(MusicFile mf) throws ConnectException {
     this.musicFile = mf;
-    this.results = new HashMap<>();
+    this.result = new QueryResult();
     String searchString = createSearchStr();
     fillResultsMap(searchString);
+    mf.setQueryResult(code, result);
+    mf.setLastQueryCode(code);
   }
 
   protected String createSearchStr() {
@@ -100,8 +102,8 @@ public class Query {
     return "[name=" + name + ", code=" + code + "]";
   }
 
-  public Map<String, Map<String, Object>> getResults() {
-    return results;
+  public QueryResult getResults() {
+    return result;
   }
 
   public String getClassName() {
