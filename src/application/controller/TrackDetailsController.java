@@ -3,6 +3,7 @@ package application.controller;
 import java.io.ByteArrayInputStream;
 import java.net.ConnectException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,13 +13,12 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import application.query.Query;
-import application.query.QueryResult;
 import application.query.QueryUtility;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.concurrent.Service;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -26,11 +26,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
@@ -126,11 +128,14 @@ public class TrackDetailsController implements Initializable {
   private Label lblQueryStatus;
 
   @FXML
+  private ComboBox<String> cmbQueryResultName;
+
+  @FXML
   private Label lblQName;
 
   private Parent callerWindowRoot;
 
-  private QueryResult results;
+  private Map<String, Object> results;
 
   private Image originalImg;
 
@@ -146,12 +151,74 @@ public class TrackDetailsController implements Initializable {
   @Override
   public void initialize(URL arg0, ResourceBundle arg1) {
     setTrackData();
+    initSelectionListeners();
+    initCmbQueryResultName();
     initQueryMethods();
     initTableColumns();
     initTblOriginal();
-    initTblResults();
     initTxtIsrc();
     initStatusBarComponents();
+  }
+
+  private void initSelectionListeners() {
+    // cmbQueryResultName
+    SingleSelectionModel<String> selectionModel = cmbQueryResultName.getSelectionModel();
+    selectionModel.selectedItemProperty().addListener(e -> {
+      String qName = selectionModel.getSelectedItem();
+      if (qName != null) {
+        String qCode = QueryUtility.getInstance().getQueryCodeByName(qName);
+        results = musicFile.getQueryResult(qCode);
+      } else {
+        results = new HashMap<>();
+      }
+      refreshUIAfterQuery();
+    });
+
+    // listQueryResults
+    listQueryResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshValuesInTable());
+    // tblResults
+    tblResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshImageIfNeeded());
+
+  }
+
+  private void initCmbQueryResultName() {
+    boolean empty = loadQueryResultNames();
+    selectLatestQuery(empty);
+  }
+
+  private void selectLatestQuery(boolean empty) {
+    Platform.runLater(() -> {
+      if (!empty) {
+        String lastQueryCode = musicFile.getLastQueryCode();
+        String latestQueryName = QueryUtility.getInstance().getQueryNameByCode(lastQueryCode);
+        cmbQueryResultName.getSelectionModel().select(latestQueryName);
+      }
+    });
+  }
+
+  /**
+   * Újratölti a combobox modelljét
+   * 
+   * @return - üres-e az új modell
+   */
+  private boolean loadQueryResultNames() {
+    QueryUtility qUtility = QueryUtility.getInstance();
+    Map<String, Object> allQueryResults = musicFile.getAllQueryResults();
+
+    if (allQueryResults == null) {
+      cmbQueryResultName.setDisable(true);
+      return true;
+    }
+
+    ObservableList<String> items = cmbQueryResultName.getItems();
+    items.clear();
+    allQueryResults.keySet().forEach(q -> {
+      items.add(qUtility.getQueryNameByCode(q));
+    });
+
+    cmbQueryResultName.setDisable(false);
+    return false;
+
   }
 
   private void initStatusBarComponents() {
@@ -177,19 +244,6 @@ public class TrackDetailsController implements Initializable {
   private void initTblOriginal() {
     Map<String, Object> attibuteMap = musicFile.getAttibuteMap();
     tblOriginal.setItems(FXCollections.observableArrayList(attibuteMap.entrySet()));
-  }
-
-  private void initTblResults() {
-    MusicFile selectedFile = musicFile;
-    QueryResult queryResults = selectedFile.getLatestQueryResult();
-    if (queryResults != null) {
-      String lastQueryName = QueryUtility.getInstance().getQueryNameByCode(selectedFile.getLastQueryCode());
-      results = queryResults;
-      Platform.runLater(() -> refreshUIAfterQuery(lastQueryName));
-    }
-
-    listQueryResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshValuesInTable());
-    tblResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshImageIfNeeded());
   }
 
   private void refreshImageIfNeeded() {
@@ -281,20 +335,18 @@ public class TrackDetailsController implements Initializable {
 
   }
 
-  private void refreshUIAfterQuery(String queryName) {
-    Set<String> keySet = results.keySet();
-    listQueryResults.setItems(FXCollections.observableArrayList(keySet));
-    boolean isempty = keySet.isEmpty();
-    if (!isempty) {
-      listQueryResults.getSelectionModel().select(0);
-    } else {
-      Label placeHolder = new Label("No results found for track!");
-      placeHolder.getStyleClass().add("placeHolder");
-      listQueryResults.setPlaceholder(placeHolder);
-    }
-
-    lblQueryName.setText(queryName + " ");
-    lblQueryResults.setText(lblQueryResults.getText().toLowerCase());
+  private void refreshUIAfterQuery() {
+    Platform.runLater(() -> {
+      Set<String> keySet = results.keySet();
+      listQueryResults.setItems(FXCollections.observableArrayList(keySet));
+      boolean empty = keySet.isEmpty();
+      if (empty) {
+        Label placeHolder = new Label("No results found for track!");
+        placeHolder.getStyleClass().add("placeHolder");
+        listQueryResults.setPlaceholder(placeHolder);
+      }
+      listQueryResults.getSelectionModel().selectFirst();
+    });
   }
 
   private void performQuery(Query query) throws ConnectException {
@@ -302,27 +354,29 @@ public class TrackDetailsController implements Initializable {
       query.setParam("isrc", txtIsrc.getText());
     }
     QueryUtility.getInstance().performQuery(musicFile, query);
-    results = musicFile.getLatestQueryResult();
   }
 
   private void refreshValuesInTable() {
-    String selectedId = listQueryResults.getSelectionModel().getSelectedItem();
-    if (selectedId != null) {
-      btnAssignId.setDisable(false);
-      Map<String, Object> attributeMap = results.get(selectedId);
-      if (attributeMap.containsKey("isrc")) {
-        String isrc = (String) attributeMap.get("isrc");
-        txtIsrc.setText(isrc);
+    Platform.runLater(() -> {
+      String selectedId = listQueryResults.getSelectionModel().getSelectedItem();
+      if (selectedId != null) {
+        btnAssignId.setDisable(false);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> attributeMap = (Map<String, Object>) results.get(selectedId);
+        if (attributeMap.containsKey("isrc")) {
+          String isrc = (String) attributeMap.get("isrc");
+          txtIsrc.setText(isrc);
+        } else {
+          txtIsrc.setText(StringUtils.EMPTY);
+        }
+        tblResults.setItems(FXCollections.observableArrayList(attributeMap.entrySet()));
+        tblResults.getSortOrder().add(resAttributeColumn);
       } else {
         txtIsrc.setText(StringUtils.EMPTY);
+        btnAssignId.setDisable(true);
+        tblResults.setItems(null);
       }
-      tblResults.setItems(FXCollections.observableArrayList(attributeMap.entrySet()));
-      tblResults.getSortOrder().add(resAttributeColumn);
-    } else {
-      txtIsrc.setText(StringUtils.EMPTY);
-      btnAssignId.setDisable(true);
-      tblResults.setItems(null);
-    }
+    });
   }
 
   private void setTrackData() {
@@ -378,7 +432,7 @@ public class TrackDetailsController implements Initializable {
     root.getScene().setRoot(callerWindowRoot);
   }
 
-  private class QueryService extends Service<Void> {
+  private class QueryService extends ScanService {
 
     private Query query;
 
@@ -401,19 +455,13 @@ public class TrackDetailsController implements Initializable {
     }
 
     @Override
-    protected void failed() {
-      showError();
+    protected void succeeded() {
+      results = musicFile.getLatestQueryResult();
+      super.succeeded();
     }
 
-    private void showError() {
-      Platform.runLater(() -> {
-        lblQueryStatus.getStyleClass().setAll("error");
-        lblQueryStatus.setText("Cannot connect to web service!");
-        progressIndicator.setVisible(false);
-      });
-    }
-
-    private void initUI() {
+    @Override
+    protected void initUI() {
       Platform.runLater(() -> {
         lblQName.setText(query.getName() + " query");
         lblQueryStatus.setText("");
@@ -421,18 +469,43 @@ public class TrackDetailsController implements Initializable {
       });
     }
 
+    public void setQuery(Query query) {
+      this.query = query;
+    }
+
     @Override
-    protected void succeeded() {
+    protected void showSuccess(String message) {
       Platform.runLater(() -> {
         progressIndicator.setVisible(false);
         lblQueryStatus.getStyleClass().setAll("success");
-        lblQueryStatus.setText("Finished!");
-        refreshUIAfterQuery(query.getName());
+        lblQueryStatus.setText(message);
+        initCmbQueryResultName();
+      });
+
+    }
+
+    @Override
+    protected void showError(String message) {
+      Platform.runLater(() -> {
+        lblQueryStatus.getStyleClass().setAll("error");
+        lblQueryStatus.setText(message);
+        progressIndicator.setVisible(false);
       });
     }
 
-    public void setQuery(Query query) {
-      this.query = query;
+    @Override
+    protected void hideIndicators() {
+      progressIndicator.setVisible(false);
+    }
+
+    @Override
+    protected String getSuccessMessage() {
+      return "Finished!";
+    }
+
+    @Override
+    protected String getErrorMessage() {
+      return "Cannot connect to web service!";
     }
   }
 

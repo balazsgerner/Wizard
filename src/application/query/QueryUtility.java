@@ -29,11 +29,7 @@ public class QueryUtility {
   private List<Query> queryMethods;
 
   @XmlTransient
-  private Map<String, Query> queryMethodsByCode;
-
-  protected QueryUtility() {
-    queryMethodsByCode = new HashMap<String, Query>();
-  }
+  private Map<String, Query> queryMethodsByCode = new HashMap<String, Query>();;
 
   public static QueryUtility getInstance() {
     if (instance == null) {
@@ -48,22 +44,35 @@ public class QueryUtility {
 
   public void setQueryMethods(List<Query> queryMethods) {
     this.queryMethods = queryMethods;
+    queryMethods.forEach(q -> {
+      Query queryMethod = null;
+      try {
+        queryMethod = getQueryMethodInstance(q);
+      } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException | IllegalArgumentException
+          | InvocationTargetException | SecurityException e) {
+        log.error(e);
+      }
+      queryMethodsByCode.put(q.getCode(), queryMethod);
+    });
   }
 
   public String getQueryNameByCode(String code) {
     return queryMethodsByCode.get(code).getName();
   }
 
-  public void performQuery(MusicFile musicFile, Query query) throws ConnectException {
-    Query queryMethod = null;
-    try {
-      queryMethod = getQueryMethodInstance(query);
-    } catch (NullPointerException | InvocationTargetException e) {
-      throw new ConnectException(e.getMessage());
-    } catch (Exception e) {
-      log.error("Error while performing query for:" + musicFile.toString() + "!", e);
+  public String getQueryCodeByName(String name) {
+    for (Query q : queryMethods) {
+      if (q.getName().equals(name)) {
+        return q.getCode();
+      }
     }
+    return null;
+  }
+
+  public void performQuery(MusicFile musicFile, Query query) throws ConnectException {
     try {
+      Query queryMethod = null;
+      queryMethod = queryMethodsByCode.get(query.getCode());
       queryMethod.performQuery(musicFile);
     } catch (ConnectException e) {
       log.error("Cannot connect to web service!", e);
@@ -74,13 +83,9 @@ public class QueryUtility {
   private Query getQueryMethodInstance(Query query) throws ClassNotFoundException, InstantiationException, IllegalAccessException,
       NoSuchMethodException, IllegalArgumentException, InvocationTargetException, SecurityException {
     Query queryMethod = queryMethodsByCode.get(query.getCode());
-    if (queryMethod == null) {
-      Class<? extends Query> queryMethodClass = Class.forName(query.getClassName()).asSubclass(Query.class);
-      queryMethod = queryMethodClass.getDeclaredConstructor(Query.class).newInstance(query);
-      queryMethodsByCode.put(queryMethod.getCode(), queryMethod);
-    } else {
-      queryMethod.setParams(query.getParams());
-    }
+    Class<? extends Query> queryMethodClass = Class.forName(query.getClassName()).asSubclass(Query.class);
+    queryMethod = queryMethodClass.getDeclaredConstructor(Query.class).newInstance(query);
+    queryMethodsByCode.put(queryMethod.getCode(), queryMethod);
     return queryMethod;
   }
 

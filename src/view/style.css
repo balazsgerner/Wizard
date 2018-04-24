@@ -26,3 +26,6 @@
 .bold {
 	-fx-font-weight: bold;
 }
+.odd {
+	-fx-background-color: blue;
+}

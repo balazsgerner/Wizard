@@ -18,7 +18,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -26,12 +25,15 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -76,7 +78,10 @@ public class MainWindowController implements Initializable {
   private Button btnSaveResults;
 
   @FXML
-  private Button btnOpenLibrary;
+  private Button btnScanFolder;
+
+  @FXML
+  private Button btnLoadResults;
 
   @FXML
   private Button btnCancelQuery;
@@ -112,7 +117,9 @@ public class MainWindowController implements Initializable {
 
   private QueryService queryService;
 
-  private SaveService saveService;
+  private DBService saveService;
+
+  private DBService loadService;
 
   @FXML
   private void openLibrary() {
@@ -161,11 +168,24 @@ public class MainWindowController implements Initializable {
     getSaveService().restart();
   }
 
-  private SaveService getSaveService() {
+  @FXML
+  private void loadResults() {
+    getLoadService().restart();
+  }
+
+  private DBService getSaveService() {
     if (saveService == null) {
       return new SaveService();
     } else {
       return saveService;
+    }
+  }
+
+  private DBService getLoadService() {
+    if (loadService == null) {
+      return new LoadService();
+    } else {
+      return loadService;
     }
   }
 
@@ -174,11 +194,32 @@ public class MainWindowController implements Initializable {
     txtFilter.setText("");
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void initialize(URL arg0, ResourceBundle arg1) {
-    openMenuItem.setAccelerator(new KeyCharacterCombination("O", KeyCombination.CONTROL_DOWN));
+    initTxtFilter();
+    initTableView();
+    initProgressIndicators();
+    initBtnOpenLibrary();
+    initBtnSaveResults();
+    initBtnLoadResults();
+    initBtnQueryAll();
+    initBtnDetails();
+  }
 
+  private void initBtnLoadResults() {
+    ImageView iv = new ImageView(ImageLoader.getInstance().loadImage("database.load"));
+    iv.setFitHeight(24);
+    iv.setPreserveRatio(true);
+    btnLoadResults.setGraphic(iv);
+  }
+
+  private void initTxtFilter() {
+    txtFilter.textProperty().addListener(e -> filterTableModel());
+  }
+
+  @SuppressWarnings("unchecked")
+  private void initTableView() {
+    musicDetails.getSelectionModel().selectedItemProperty().addListener(e -> enableTrackDetailsButton());
     TableColumn<MusicFile, String> extensionColumn = new TableColumn<>("Extension");
     extensionColumn.setCellValueFactory(new PropertyValueFactory<>("extension"));
     TableColumn<MusicFile, String> pathColumn = new TableColumn<>("Path");
@@ -193,30 +234,31 @@ public class MainWindowController implements Initializable {
     genreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
     TableColumn<MusicFile, String> yearColumn = new TableColumn<>("Year");
     yearColumn.setCellValueFactory(new PropertyValueFactory<>("year"));
-
-    initBtnQueryAll();
+    yearColumn.setStyle("-fx-alignment: CENTER");
+    yearColumn.setMinWidth(45);
+    yearColumn.setPrefWidth(45);
+    yearColumn.setMaxWidth(65);
+    TableColumn<MusicFile, Boolean> dirtyColumn = new TableColumn<>("Dirty");
+    dirtyColumn.setCellValueFactory(new PropertyValueFactory<>("dirty"));
+    dirtyColumn.setStyle("-fx-alignment: CENTER");
+    dirtyColumn.setCellFactory(param -> new TableCellFactory());
+    dirtyColumn.setPrefWidth(45);
+    dirtyColumn.setResizable(false);
     filteredModel = new FilteredList<>(model);
     musicDetails.setItems(filteredModel);
-
     musicDetails.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
     extensionColumn.setVisible(false);
     pathColumn.setVisible(false);
-    musicDetails.getColumns().addAll(extensionColumn, pathColumn, bandColumn, titleColumn, albumColumn, yearColumn, genreColumn);
-    musicDetails.getColumns().forEach(c -> c.setSortable(true));
+    musicDetails.getColumns().addAll(dirtyColumn, extensionColumn, pathColumn, bandColumn, titleColumn, albumColumn, yearColumn, genreColumn);
+    musicDetails.setRowFactory(createRowFactory());
+  }
 
+  private void initBtnDetails() {
     ImageView iv = new ImageView(ImageLoader.getInstance().loadImage("details"));
     iv.setFitHeight(24);
     iv.setPreserveRatio(true);
-
     btnTrackDetails.setGraphic(iv);
     btnTrackDetails.setOnAction(e -> loadTrackDetailView(musicDetails.getSelectionModel().getSelectedItem()));
-    musicDetails.setRowFactory(createRowFactory());
-
-    musicDetails.getSelectionModel().selectedItemProperty().addListener(e -> enableTrackDetailsButton());
-    txtFilter.textProperty().addListener(e -> filterTableModel());
-    initProgressIndicators();
-    initBtnOpenLibrary();
-    initBtnSaveResults();
   }
 
   private void initBtnSaveResults() {
@@ -227,11 +269,12 @@ public class MainWindowController implements Initializable {
   }
 
   private void initBtnOpenLibrary() {
+    openMenuItem.setAccelerator(new KeyCharacterCombination("O", KeyCombination.CONTROL_DOWN));
     ImageView iv = new ImageView(ImageLoader.getInstance().loadImage("folder"));
     iv.setFitHeight(24);
     iv.setPreserveRatio(true);
-    btnOpenLibrary.setGraphic(iv);
-    btnOpenLibrary.setOnAction(e -> openLibrary());
+    btnScanFolder.setGraphic(iv);
+    btnScanFolder.setOnAction(e -> openLibrary());
   }
 
   private void initProgressIndicators() {
@@ -254,6 +297,7 @@ public class MainWindowController implements Initializable {
     iv.setFitHeight(24);
     iv.setPreserveRatio(true);
     btnQueryAll.setGraphic(iv);
+
     ListChangeListener<MusicFile> modelEmptyListener = new ListChangeListener<MusicFile>() {
 
       @Override
@@ -261,12 +305,16 @@ public class MainWindowController implements Initializable {
         boolean modelEmpty = model.isEmpty();
         boolean disabled = btnQueryAll.isDisabled();
         if (modelEmpty && !disabled) {
-          btnQueryAll.setDisable(true);
-          btnSaveResults.setDisable(true);
+          disable(true);
         } else if (!modelEmpty && disabled) {
-          btnQueryAll.setDisable(false);
-          btnSaveResults.setDisable(false);
+          disable(false);
         }
+      }
+
+      private void disable(boolean value) {
+        btnQueryAll.setDisable(value);
+        btnSaveResults.setDisable(value);
+        btnLoadResults.setDisable(value);
       }
     };
     model.addListener(modelEmptyListener);
@@ -301,6 +349,7 @@ public class MainWindowController implements Initializable {
           loadTrackDetailView(selectedFile);
         }
       });
+
       return row;
     };
   }
@@ -349,26 +398,32 @@ public class MainWindowController implements Initializable {
     }
   }
 
-  private final class SaveService extends Service<Void> {
+  private final class TableCellFactory extends TableCell<MusicFile, Boolean> {
+
+    private CheckBox cb;
+
+    private TableCellFactory() {
+      cb = new CheckBox();
+      cb.selectedProperty().bind(itemProperty());
+      this.setGraphic(cb);
+      this.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+      this.setFocusTraversable(false);
+      this.setEditable(false);
+    }
 
     @Override
-    public void reset() {
-      Platform.runLater(() -> {
-        scanProgressIndicator.progressProperty().bind(progressProperty());
+    protected void updateItem(Boolean item, boolean empty) {
+      super.updateItem(item, empty);
 
-        pnlProgressIndicator.setVisible(true);
-        lblQueryName.setVisible(false);
-        lblQueryStatus.getStyleClass().setAll("bold");
-        lblQueryStatus.setText("Saving...");
-        lblQueryStatus.setVisible(true);
-
-        pnlScanIndicator.setVisible(true);
-        trackNumber.setVisible(false);
-        scanProgressIndicator.setVisible(true);
-        lblQueryStatus.setPadding(new Insets(0, 5, 0, 0));
-      });
-      super.reset();
+      if (empty) {
+        setGraphic(null);
+      } else {
+        setGraphic(cb);
+      }
     }
+  }
+
+  private class SaveService extends DBService {
 
     @Override
     protected Task<Void> createTask() {
@@ -383,25 +438,23 @@ public class MainWindowController implements Initializable {
     }
 
     @Override
-    protected void succeeded() {
-      hideIndicators();
-      showSuccess("Saving operation completed!");
-    }
-
-    private void hideIndicators() {
-      lblQueryStatus.setPadding(new Insets(0));
-      scanProgressIndicator.setVisible(false);
+    protected String getSuccessMessage() {
+      return "Save operation completed!";
     }
 
     @Override
-    protected void failed() {
-      hideIndicators();
-      showError("Error while writing music file to database!");
+    protected String getErrorMessage() {
+      return "Error while saving music files to database!";
+    }
+
+    @Override
+    protected String getTaskStartedMsg() {
+      return "Saving";
     }
 
   }
 
-  public final class QueryService extends Service<Void> {
+  public final class QueryService extends ScanService {
 
     private Query query;
 
@@ -412,8 +465,6 @@ public class MainWindowController implements Initializable {
     @Override
     protected Task<Void> createTask() {
       QueryTask queryTask = new QueryTask();
-      Platform.runLater(() -> initUI());
-      queryProgressBar.progressProperty().bind(this.progressProperty());
       return queryTask;
     }
 
@@ -425,14 +476,16 @@ public class MainWindowController implements Initializable {
       this.query = query;
     }
 
-    private void initUI() {
+    @Override
+    protected void initUI() {
+      queryProgressBar.progressProperty().bind(this.progressProperty());
       pnlScanIndicator.setVisible(false);
       pnlProgressIndicator.setVisible(true);
       queryProgressBar.setVisible(true);
       btnCancelQuery.setVisible(true);
       lblQueryName.setVisible(true);
-      lblQueryName.setText(query.getName() + " query");
       lblQueryStatus.setVisible(true);
+      lblQueryName.setText(query.getName() + " query");
       lblQueryStatus.setText("");
       lblQueryStatus.getStyleClass().setAll("default");
     }
@@ -449,30 +502,13 @@ public class MainWindowController implements Initializable {
       }
 
       @Override
-      protected void failed() {
-        queryProgressBar.setVisible(false);
-        btnCancelQuery.setVisible(false);
-        showError("Cannot connect to web service!");
-      }
-
-      @Override
       protected void cancelled() {
         Platform.runLater(() -> {
           lblQueryStatus.getStyleClass().setAll("info");
           lblQueryStatus.setText("Cancelled!");
-          queryProgressBar.setVisible(false);
-          btnCancelQuery.setVisible(false);
+          hideIndicators();
         });
 
-      }
-
-      @Override
-      protected void succeeded() {
-        Platform.runLater(() -> {
-          queryProgressBar.setVisible(false);
-          btnCancelQuery.setVisible(false);
-          showSuccess("Finished!");
-        });
       }
 
       @Override
@@ -486,34 +522,50 @@ public class MainWindowController implements Initializable {
 
     }
 
+    @Override
+    protected void showSuccess(String message) {
+      showSuccessMsg(message);
+    }
+
+    @Override
+    protected void showError(String message) {
+      showErrorMsg(message);
+    }
+
+    @Override
+    protected void hideIndicators() {
+      queryProgressBar.setVisible(false);
+      btnCancelQuery.setVisible(false);
+    }
+
+    @Override
+    protected String getSuccessMessage() {
+      return "Finished!";
+    }
+
+    @Override
+    protected String getErrorMessage() {
+      return "Cannot connect to web service!";
+    }
   }
 
-  private void showSuccess(String message) {
+  private void showSuccessMsg(String message) {
     Platform.runLater(() -> {
       lblQueryStatus.getStyleClass().setAll("success");
       lblQueryStatus.setText(message);
     });
   }
 
-  private void showError(String message) {
+  private void showErrorMsg(String message) {
     Platform.runLater(() -> {
       lblQueryStatus.getStyleClass().setAll("error");
       lblQueryStatus.setText(message);
     });
   }
 
-  private final class OpenLibraryService extends Service<Void> {
+  private class OpenLibraryService extends ScanService {
 
     private File directory;
-
-    @Override
-    public void reset() {
-      Platform.runLater(() -> {
-        trackNumber.getStyleClass().setAll("bold");
-        scanProgressIndicator.progressProperty().bind(progressProperty());
-      });
-      super.reset();
-    }
 
     private OpenLibraryService(File directory) {
       this.directory = directory;
@@ -533,17 +585,125 @@ public class MainWindowController implements Initializable {
           return null;
         }
 
+      };
+    }
+
+    @Override
+    protected void initUI() {
+      Platform.runLater(() -> {
+        trackNumber.getStyleClass().setAll("bold");
+        scanProgressIndicator.progressProperty().bind(progressProperty());
+      });
+    }
+
+    @Override
+    protected void showSuccess(String message) {
+      Platform.runLater(() -> {
+        trackNumber.setText(message);
+        filterTableModel();
+      });
+    }
+
+    @Override
+    protected void showError(String message) {
+      trackNumber.setText(message);
+    }
+
+    @Override
+    protected void hideIndicators() {
+      scanProgressIndicator.setVisible(false);
+      txtFilter.setDisable(false);
+    }
+
+    @Override
+    protected String getSuccessMessage() {
+      return model.size() + " tracks found";
+    }
+
+    @Override
+    protected String getErrorMessage() {
+      return "Error while scanning library!";
+    }
+  }
+
+  private abstract class DBService extends ScanService {
+
+    protected abstract Task<Void> createTask();
+
+    protected abstract String getTaskStartedMsg();
+
+    protected abstract String getSuccessMessage();
+
+    protected abstract String getErrorMessage();
+
+    @Override
+    protected void initUI() {
+      Platform.runLater(() -> {
+        scanProgressIndicator.progressProperty().bind(progressProperty());
+
+        pnlProgressIndicator.setVisible(true);
+        lblQueryName.setVisible(false);
+        queryProgressBar.setVisible(false);
+        btnCancelQuery.setVisible(false);
+        lblQueryStatus.getStyleClass().setAll("bold");
+        lblQueryStatus.setText(getTaskStartedMsg());
+        lblQueryStatus.setVisible(true);
+
+        pnlScanIndicator.setVisible(true);
+        trackNumber.setVisible(false);
+        scanProgressIndicator.setVisible(true);
+        lblQueryStatus.setPadding(new Insets(0, 5, 0, 0));
+      });
+
+    }
+
+    @Override
+    protected void showSuccess(String message) {
+      showSuccessMsg(message);
+    }
+
+    @Override
+    protected void showError(String message) {
+      showErrorMsg(message);
+    }
+
+    @Override
+    protected void hideIndicators() {
+      lblQueryStatus.setPadding(new Insets(0));
+      scanProgressIndicator.setVisible(false);
+    }
+
+  }
+
+  private class LoadService extends DBService {
+
+    @Override
+    protected Task<Void> createTask() {
+      return new Task<Void>() {
+
         @Override
-        protected void succeeded() {
-          Platform.runLater(() -> {
-            scanProgressIndicator.setVisible(false);
-            txtFilter.setDisable(false);
-            trackNumber.setText(model.size() + " tracks found");
-            filterTableModel();
-          });
+        protected Void call() throws Exception {
+          DBManager.getInstance().loadMusicFiles(model);
+          return null;
         }
       };
     }
+
+    @Override
+    protected String getSuccessMessage() {
+      return "Load operation completed!";
+    }
+
+    @Override
+    protected String getErrorMessage() {
+      return "Error while loading music files to database!";
+    }
+
+    @Override
+    protected String getTaskStartedMsg() {
+      return "Loading...";
+    }
+
   }
 
 }

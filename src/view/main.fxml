@@ -53,7 +53,7 @@
               <items>
                   <HBox alignment="BOTTOM_LEFT" nodeOrientation="LEFT_TO_RIGHT">
                      <children>
-                        <Button fx:id="btnOpenLibrary" maxHeight="34.0" mnemonicParsing="false" prefHeight="34.0" text="Open Library">
+                        <Button fx:id="btnScanFolder" maxHeight="34.0" mnemonicParsing="false" prefHeight="34.0" text="Scan folder...">
                            <HBox.margin>
                               <Insets right="10.0" />
                            </HBox.margin>
@@ -75,6 +75,11 @@
                            </HBox.margin>
                         </MenuButton>
                         <Button fx:id="btnSaveResults" disable="true" maxHeight="34.0" mnemonicParsing="false" onAction="#saveAllResultsToDatabase" prefHeight="34.0" text="Save results">
+                           <HBox.margin>
+                              <Insets left="5.0" />
+                           </HBox.margin>
+                        </Button>
+                        <Button fx:id="btnLoadResults" disable="true" layoutX="475.0" layoutY="10.0" maxHeight="34.0" mnemonicParsing="false" onAction="#loadResults" prefHeight="34.0" text="Load results">
                            <HBox.margin>
                               <Insets left="5.0" />
                            </HBox.margin>

@@ -17,6 +17,8 @@ import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
 
 import application.query.QueryResult;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
 public class MusicFile {
 
@@ -26,11 +28,11 @@ public class MusicFile {
 
   private Tag tag;
 
-  private Map<String, QueryResult> queryResultMap;
+  private Map<String, Object> queryResultMap;
 
   private String lastQueryCode;
-  
-  private boolean dirty = false;
+
+  private BooleanProperty dirty = new SimpleBooleanProperty(false);
 
   public MusicFile(File file) {
     try {
@@ -124,7 +126,10 @@ public class MusicFile {
       return name.startsWith("get") && !(name.equals("getAttibuteMap") || name.equals("getArtwork"));
     });
 
-    listOfGetters.filter(p -> !p.getName().toLowerCase().contains("query")).forEach(g -> {
+    listOfGetters.filter(p -> {
+      String mName = p.getName().toLowerCase();
+      return !(mName.contains("query") || mName.contains("dirty"));
+    }).forEach(g -> {
 
       String attributeName = g.getName().split("get")[1].toLowerCase();
       attributeName = attributeName.substring(0, 1).toUpperCase() + attributeName.substring(1);
@@ -138,16 +143,28 @@ public class MusicFile {
     return attributeMap;
   }
 
-  public Map<String, QueryResult> getAllQueryResults() {
+  public Map<String, Object> getAllQueryResults() {
     return queryResultMap;
   }
 
-  public void setAllQueryResults(Map<String, QueryResult> queryResults) {
+  public void setAllQueryResults(Map<String, Object> queryResults) {
+    String latestQueryCode = (String) queryResults.remove("latest_query");
+    this.lastQueryCode = latestQueryCode;
+    if (queryResultMap != null) {
+      queryResultMap.clear();
+    }
+    queryResults.forEach((code, queryResult) -> {
+      HashMap<String, Map<String, Object>> resMap = new HashMap<>();
+      resMap.put(code, queryResults);
+      setQueryResult(code, new QueryResult(resMap));
+    });
     this.queryResultMap = queryResults;
+    setDirty(false);
   }
 
-  public QueryResult getQueryResult(String queryCode) {
-    return queryResultMap.get(queryCode);
+  @SuppressWarnings("unchecked")
+  public Map<String, Object> getQueryResult(String queryCode) {
+    return (Map<String, Object>) queryResultMap.get(queryCode);
   }
 
   public void setQueryResult(String queryCode, QueryResult result) {
@@ -155,7 +172,7 @@ public class MusicFile {
       queryResultMap = new HashMap<>();
     }
     queryResultMap.put(queryCode, result);
-    dirty = true;
+    dirty.set(true);
   }
 
   public String getLastQueryCode() {
@@ -166,18 +183,21 @@ public class MusicFile {
     this.lastQueryCode = lastQueryCode;
   }
 
-  public QueryResult getLatestQueryResult() {
-    return lastQueryCode == null ? null : queryResultMap.get(lastQueryCode);
+  @SuppressWarnings("unchecked")
+  public Map<String, Object> getLatestQueryResult() {
+    return lastQueryCode == null ? null : (Map<String, Object>) queryResultMap.get(lastQueryCode);
   }
 
-  
-  public boolean isDirty() {
-    return dirty;
-  }
-
-  
   public void setDirty(boolean dirty) {
-    this.dirty = dirty;
+    this.dirty.set(dirty);
+  }
+
+  public Boolean getDirty() {
+    return dirty.get();
+  }
+
+  public BooleanProperty dirtyProperty() {
+    return dirty;
   }
 
 }

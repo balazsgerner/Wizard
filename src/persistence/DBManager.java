@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 
-import application.query.QueryResult;
 import model.MusicFile;
 
 public class DBManager {
@@ -53,15 +52,23 @@ public class DBManager {
 
   public void saveMusicFile(MusicFile mf) throws CouchbaseLiteException {
     Document document = musicLibraryDB.getDocument(mf.getPath());
-    Map<String, QueryResult> allQueryResults = mf.getAllQueryResults();
+    Map<String, Object> allQueryResults = mf.getAllQueryResults();
+    allQueryResults.put("latest_query", mf.getLastQueryCode());
     try {
+      document.createRevision();
+      // database content if exists
       Map<String, Object> properties = document.getProperties();
-      if (properties == null) {
-        properties = new HashMap<>(allQueryResults);
+      
+      Map<String, Object> newValues;
+      if (properties != null) {
+        newValues = new HashMap<>(properties);
       } else {
-        document.createRevision();
+        newValues = new HashMap<>();
       }
-      document.putProperties(properties);
+      newValues.putAll(allQueryResults);
+
+      // persist data
+      document.putProperties(newValues);
       mf.setDirty(false);
     } catch (CouchbaseLiteException e) {
       log.error("Error while writing musicFile to database!\n" + mf.toString(), e);
@@ -70,12 +77,25 @@ public class DBManager {
   }
 
   public void saveMusicFiles(List<MusicFile> musicFiles) throws CouchbaseLiteException {
-    List<MusicFile> dirtyFiles = musicFiles.stream().filter(mf -> mf.isDirty()).collect(Collectors.toList());
+    List<MusicFile> dirtyFiles = musicFiles.stream().filter(mf -> mf.getDirty()).collect(Collectors.toList());
     for (MusicFile mf : dirtyFiles) {
       saveMusicFile(mf);
     }
 
-//    allDocumentsQuery();
+    // allDocumentsQuery();
+  }
+
+  public void loadMusicFiles(List<MusicFile> musicFiles) {
+    musicFiles.forEach(mf -> {
+      Document document = musicLibraryDB.getExistingDocument(mf.getPath());
+      if (document != null) {
+        Map<String, Object> results = new HashMap<>(document.getProperties());
+        results.remove("_rev");
+        results.remove("_id");
+        mf.setAllQueryResults(results);
+      }
+    });
+
   }
 
   private void allDocumentsQuery() {
