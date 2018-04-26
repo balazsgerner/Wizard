@@ -28,9 +28,11 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.TableColumn;
@@ -143,14 +145,20 @@ public class TrackDetailsController implements Initializable {
 
   private MusicFile musicFile;
 
+  private Map<String, String> assignedIds;
+
+  private ObservableList<String> listModel;
+
   public TrackDetailsController(Parent callerWindowRoot, MusicFile musicFile) {
     this.callerWindowRoot = callerWindowRoot;
     this.musicFile = musicFile;
+    this.assignedIds = musicFile.getAssignedIds();
   }
 
   @Override
   public void initialize(URL arg0, ResourceBundle arg1) {
     setTrackData();
+    initAssignedIdListener();
     initSelectionListeners();
     initCmbQueryResultName();
     initQueryMethods();
@@ -158,6 +166,12 @@ public class TrackDetailsController implements Initializable {
     initTblOriginal();
     initTxtIsrc();
     initStatusBarComponents();
+  }
+
+  private void initAssignedIdListener() {
+    listModel = FXCollections.observableArrayList();
+    listQueryResults.setItems(listModel);
+    listQueryResults.setCellFactory(param -> new CustomCell());
   }
 
   private void initSelectionListeners() {
@@ -171,11 +185,12 @@ public class TrackDetailsController implements Initializable {
       } else {
         results = new HashMap<>();
       }
-      refreshUIAfterQuery();
+      refreshUIAfterQuery(null);
     });
 
     // listQueryResults
     listQueryResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshValuesInTable());
+
     // tblResults
     tblResults.getSelectionModel().selectedItemProperty().addListener(e -> refreshImageIfNeeded());
 
@@ -335,17 +350,22 @@ public class TrackDetailsController implements Initializable {
 
   }
 
-  private void refreshUIAfterQuery() {
+  private void refreshUIAfterQuery(String select) {
     Platform.runLater(() -> {
       Set<String> keySet = results.keySet();
-      listQueryResults.setItems(FXCollections.observableArrayList(keySet));
+      listModel.setAll(keySet);
       boolean empty = keySet.isEmpty();
       if (empty) {
         Label placeHolder = new Label("No results found for track!");
         placeHolder.getStyleClass().add("placeHolder");
         listQueryResults.setPlaceholder(placeHolder);
       }
-      listQueryResults.getSelectionModel().selectFirst();
+      MultipleSelectionModel<String> selectionModel = listQueryResults.getSelectionModel();
+      if (select == null) {
+        selectionModel.selectFirst();
+      } else {
+        selectionModel.select(select);
+      }
     });
   }
 
@@ -360,7 +380,15 @@ public class TrackDetailsController implements Initializable {
     Platform.runLater(() -> {
       String selectedId = listQueryResults.getSelectionModel().getSelectedItem();
       if (selectedId != null) {
-        btnAssignId.setDisable(false);
+        boolean enabled = true;
+        if (assignedIds != null && assignedIds.containsValue(selectedId)) {
+          enabled = false;
+        } else {
+          enabled = true;
+        }
+
+        btnAssignId.setDisable(!enabled);
+
         @SuppressWarnings("unchecked")
         Map<String, Object> attributeMap = (Map<String, Object>) results.get(selectedId);
         if (attributeMap.containsKey("isrc")) {
@@ -373,8 +401,8 @@ public class TrackDetailsController implements Initializable {
         tblResults.getSortOrder().add(resAttributeColumn);
       } else {
         txtIsrc.setText(StringUtils.EMPTY);
-        btnAssignId.setDisable(true);
         tblResults.setItems(null);
+        btnAssignId.setDisable(true);
       }
     });
   }
@@ -428,8 +456,40 @@ public class TrackDetailsController implements Initializable {
   }
 
   @FXML
+  private void assignId() {
+    String qName = cmbQueryResultName.getSelectionModel().getSelectedItem();
+    QueryUtility qUtility = QueryUtility.getInstance();
+    String qCode = qUtility.getQueryCodeByName(qName);
+    String selectedId = listQueryResults.getSelectionModel().getSelectedItem();
+    musicFile.assignId(qCode, selectedId);
+    this.assignedIds = musicFile.getAssignedIds();
+    refreshUIAfterQuery(selectedId);
+  }
+
+  @FXML
   private void backToMainView() {
     root.getScene().setRoot(callerWindowRoot);
+  }
+
+  private final class CustomCell extends ListCell<String> {
+
+    @Override
+    protected void updateItem(String item, boolean empty) {
+      super.updateItem(item, empty);
+
+      if (empty || item == null) {
+        setText(null);
+      } else {
+        ObservableList<String> styleClass = getStyleClass();
+        if (assignedIds != null && assignedIds.containsValue(item)) {
+          styleClass.add("bold");
+        } else {
+          styleClass.remove("bold");
+        }
+        setText(item);
+      }
+    }
+
   }
 
   private class QueryService extends ScanService {

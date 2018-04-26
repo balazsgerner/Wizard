@@ -30,6 +30,8 @@ public class MusicFile {
 
   private Map<String, Object> queryResultMap;
 
+  private Map<String, String> assignedIds;
+
   private String lastQueryCode;
 
   private BooleanProperty dirty = new SimpleBooleanProperty(false);
@@ -147,9 +149,10 @@ public class MusicFile {
     return queryResultMap;
   }
 
+  @SuppressWarnings("unchecked")
   public void setAllQueryResults(Map<String, Object> queryResults) {
-    String latestQueryCode = (String) queryResults.remove("latest_query");
-    this.lastQueryCode = latestQueryCode;
+    this.lastQueryCode = (String) queryResults.remove("latest_query");
+    this.assignedIds = (Map<String, String>) queryResults.remove("assigned_ids");
     if (queryResultMap != null) {
       queryResultMap.clear();
     }
@@ -198,6 +201,21 @@ public class MusicFile {
 
   public BooleanProperty dirtyProperty() {
     return dirty;
+  }
+
+  public Map<String, String> getAssignedIds() {
+    return assignedIds;
+  }
+
+  public void setAssignedIds(Map<String, String> assignedIds) {
+    this.assignedIds = assignedIds;
+  }
+
+  public void assignId(String queryMethod, String id) {
+    if (assignedIds == null) {
+      assignedIds = new HashMap<>();
+    }
+    assignedIds.put(queryMethod, id);
   }
 
 }

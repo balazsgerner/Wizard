@@ -48,9 +48,8 @@ public class QueryUtility {
       Query queryMethod = null;
       try {
         queryMethod = getQueryMethodInstance(q);
-      } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException | IllegalArgumentException
-          | InvocationTargetException | SecurityException e) {
-        log.error(e);
+      } catch (Exception e) {
+        log.error("Error while initializing query methods", e);
       }
       queryMethodsByCode.put(q.getCode(), queryMethod);
     });

@@ -54,6 +54,7 @@ public class DBManager {
     Document document = musicLibraryDB.getDocument(mf.getPath());
     Map<String, Object> allQueryResults = mf.getAllQueryResults();
     allQueryResults.put("latest_query", mf.getLastQueryCode());
+    allQueryResults.put("assigned_ids", mf.getAssignedIds());
     try {
       document.createRevision();
       // database content if exists

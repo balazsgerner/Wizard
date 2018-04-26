@@ -84,8 +84,8 @@
                         <Font size="14.0" />
                      </font>
                   </Label>
-                  <MenuButton fx:id="btnPerformQuery" mnemonicParsing="false" prefHeight="35.0" text="Perform query..." GridPane.columnIndex="5" GridPane.rowIndex="3" />
-                  <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="3" GridPane.valignment="BOTTOM">
+                  <MenuButton fx:id="btnPerformQuery" mnemonicParsing="false" prefHeight="35.0" text="Perform query..." GridPane.columnIndex="5" GridPane.rowIndex="3" GridPane.valignment="BOTTOM" />
+                  <HBox alignment="BOTTOM_LEFT" spacing="5.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="3" GridPane.valignment="BOTTOM">
                      <children>
                         <Label alignment="BOTTOM_LEFT" minWidth="25.0" text="ISRC" />
                         <TextField fx:id="txtIsrc" alignment="BOTTOM_LEFT" disable="true" minWidth="50.0" HBox.hgrow="ALWAYS" />
@@ -225,13 +225,13 @@
                                              <opaqueInsets>
                                                 <Insets />
                                              </opaqueInsets>
-                                             <padding>
+                                             <GridPane.margin>
                                                 <Insets bottom="5.0" right="5.0" />
-                                             </padding>
+                                             </GridPane.margin>
                                           </ListView>
                                           <VBox spacing="5.0" GridPane.columnIndex="1">
                                              <children>
-                                                <Button fx:id="btnAssignId" disable="true" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="Assign Id to track" />
+                                                <Button fx:id="btnAssignId" disable="true" mnemonicParsing="false" onAction="#assignId" prefHeight="30.0" prefWidth="150.0" text="Assign Id to track" />
                                              </children>
                                           </VBox>
                                        </children>

@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>javafx_gyak</groupId>
-	<artifactId>javafx_gyak</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<groupId>wizard_final</groupId>
+	<artifactId>wizard_final</artifactId>
+	<version>1.0</version>
 	<repositories>
 		<repository>
 			<id>central</id>
@@ -33,7 +33,14 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.7.0</version>
 				<configuration>
-					<release>9</release>
+					<source>1.8</source>
+					<target>1.8</target>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>application.controller.Main</mainClass>
+						</manifest>
+					</archive>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -43,11 +50,6 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>1.3.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver</artifactId>
-			<version>3.6.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.couchbase.lite</groupId>
@@ -88,11 +90,6 @@
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
 			<version>20140107</version>
-		</dependency>
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.8.2</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
