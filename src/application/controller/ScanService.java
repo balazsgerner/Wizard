@@ -13,6 +13,7 @@ public abstract class ScanService extends Service<Void> {
 
   protected abstract void initUI();
 
+  @Override
   protected abstract Task<Void> createTask();
 
   protected abstract void showSuccess(String message);

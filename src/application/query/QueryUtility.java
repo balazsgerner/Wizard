@@ -29,7 +29,7 @@ public class QueryUtility {
   private List<Query> queryMethods;
 
   @XmlTransient
-  private Map<String, Query> queryMethodsByCode = new HashMap<String, Query>();;
+  private Map<String, Query> queryMethodsByCode = new HashMap<String, Query>();
 
   public static QueryUtility getInstance() {
     if (instance == null) {
@@ -70,8 +70,7 @@ public class QueryUtility {
 
   public void performQuery(MusicFile musicFile, Query query) throws ConnectException {
     try {
-      Query queryMethod = null;
-      queryMethod = queryMethodsByCode.get(query.getCode());
+      Query queryMethod = queryMethodsByCode.get(query.getCode());
       queryMethod.performQuery(musicFile);
     } catch (ConnectException e) {
       log.error("Cannot connect to web service!", e);

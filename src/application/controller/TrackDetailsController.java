@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import application.query.Query;
 import application.query.QueryUtility;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -243,26 +244,17 @@ public class TrackDetailsController implements Initializable {
   }
 
   private void initTxtIsrc() {
-    txtIsrc.textProperty().addListener(e -> disableButtonsIfEmpty());
-  }
-
-  private void disableButtonsIfEmpty() {
-    boolean enabled;
-    if (StringUtils.isEmpty(txtIsrc.getText())) {
-      enabled = false;
-    } else {
-      enabled = true;
-    }
-    btnLookukIsrc.setDisable(!enabled);
+    btnLookukIsrc.disableProperty().bind(Bindings.isEmpty(txtIsrc.textProperty()));
   }
 
   private void initTblOriginal() {
-    Map<String, Object> attibuteMap = musicFile.getAttibuteMap();
+    Map<String, Object> attibuteMap = musicFile.getAttributeMap();
     tblOriginal.setItems(FXCollections.observableArrayList(attibuteMap.entrySet()));
   }
 
   private void refreshImageIfNeeded() {
     Entry<String, Object> selectedItem = tblResults.getSelectionModel().getSelectedItem();
+
     if (selectedItem != null && selectedItem.getKey().contains("image")) {
       if (originalImg == null) {
         originalImg = imgAlbum.getImage();
@@ -287,27 +279,18 @@ public class TrackDetailsController implements Initializable {
   }
 
   private Callback<CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>> createMapValueColumnFactory() {
-    return new Callback<TableColumn.CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>>() {
-
-      @Override
-      public ObservableValue<String> call(CellDataFeatures<Entry<String, Object>, String> param) {
-        Object value = param.getValue().getValue();
-        if (value == null) {
-          return new SimpleStringProperty(StringUtils.EMPTY);
-        }
-        return new SimpleStringProperty(value.toString());
-      }
+    return param -> {
+      Entry<String, Object> mapEntry = param.getValue();
+      Object value = mapEntry.getValue();
+      String text = value == null ? StringUtils.EMPTY : value.toString();
+      return new SimpleStringProperty(text);
     };
   }
 
   private Callback<CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>> createMapKeyColumnFactory() {
-    return new Callback<TableColumn.CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>>() {
-
-      @Override
-      public ObservableValue<String> call(CellDataFeatures<Entry<String, Object>, String> param) {
-        String key = param.getValue().getKey();
-        return new SimpleStringProperty(key.substring(0, 1).toUpperCase() + key.substring(1));
-      }
+    return param -> {
+      String key = param.getValue().getKey();
+      return new SimpleStringProperty(key.substring(0, 1).toUpperCase() + key.substring(1));
     };
   }
 
@@ -354,12 +337,13 @@ public class TrackDetailsController implements Initializable {
     Platform.runLater(() -> {
       Set<String> keySet = results.keySet();
       listModel.setAll(keySet);
-      boolean empty = keySet.isEmpty();
-      if (empty) {
+
+      if (listModel.isEmpty()) {
         Label placeHolder = new Label("No results found for track!");
         placeHolder.getStyleClass().add("placeHolder");
         listQueryResults.setPlaceholder(placeHolder);
       }
+
       MultipleSelectionModel<String> selectionModel = listQueryResults.getSelectionModel();
       if (select == null) {
         selectionModel.selectFirst();
@@ -379,6 +363,7 @@ public class TrackDetailsController implements Initializable {
   private void refreshValuesInTable() {
     Platform.runLater(() -> {
       String selectedId = listQueryResults.getSelectionModel().getSelectedItem();
+
       if (selectedId != null) {
         boolean enabled = true;
         if (assignedIds != null && assignedIds.containsValue(selectedId)) {
@@ -386,7 +371,6 @@ public class TrackDetailsController implements Initializable {
         } else {
           enabled = true;
         }
-
         btnAssignId.setDisable(!enabled);
 
         @SuppressWarnings("unchecked")

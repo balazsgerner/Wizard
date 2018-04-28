@@ -14,8 +14,8 @@ import org.apache.log4j.Logger;
 import application.query.Query;
 import application.query.QueryUtility;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Task;
@@ -39,9 +39,6 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCharacterCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
@@ -55,9 +52,6 @@ public class MainWindowController implements Initializable {
 
   @FXML
   private BorderPane root;
-
-  @FXML
-  private MenuItem openMenuItem;
 
   @FXML
   private TableView<MusicFile> musicDetails;
@@ -203,14 +197,17 @@ public class MainWindowController implements Initializable {
     initBtnSaveResults();
     initBtnLoadResults();
     initBtnQueryAll();
-    initBtnDetails();
+    initBtnTrackDetails();
+    initBtnClearFilter();
+  }
+
+  private void initBtnClearFilter() {
+    btnClearFilter.disableProperty().bind(Bindings.isEmpty(txtFilter.textProperty()));
   }
 
   private void initBtnLoadResults() {
-    ImageView iv = new ImageView(ImageLoader.getInstance().loadImage("database.load"));
-    iv.setFitHeight(24);
-    iv.setPreserveRatio(true);
-    btnLoadResults.setGraphic(iv);
+    btnLoadResults.setGraphic(ImageLoader.getInstance().loadImage("database.load", 24));
+    btnLoadResults.disableProperty().bind(Bindings.size(model).isEqualTo(0));
   }
 
   private void initTxtFilter() {
@@ -219,7 +216,6 @@ public class MainWindowController implements Initializable {
 
   @SuppressWarnings("unchecked")
   private void initTableView() {
-    musicDetails.getSelectionModel().selectedItemProperty().addListener(e -> enableTrackDetailsButton());
     TableColumn<MusicFile, String> extensionColumn = new TableColumn<>("Extension");
     extensionColumn.setCellValueFactory(new PropertyValueFactory<>("extension"));
     TableColumn<MusicFile, String> pathColumn = new TableColumn<>("Path");
@@ -253,27 +249,19 @@ public class MainWindowController implements Initializable {
     musicDetails.setRowFactory(createRowFactory());
   }
 
-  private void initBtnDetails() {
-    ImageView iv = new ImageView(ImageLoader.getInstance().loadImage("details"));
-    iv.setFitHeight(24);
-    iv.setPreserveRatio(true);
-    btnTrackDetails.setGraphic(iv);
+  private void initBtnTrackDetails() {
+    btnTrackDetails.setGraphic(ImageLoader.getInstance().loadImage("details", 24));
     btnTrackDetails.setOnAction(e -> loadTrackDetailView(musicDetails.getSelectionModel().getSelectedItem()));
+    btnTrackDetails.disableProperty().bind(Bindings.isNull(musicDetails.getSelectionModel().selectedItemProperty()));
   }
 
   private void initBtnSaveResults() {
-    ImageView iv = new ImageView(ImageLoader.getInstance().loadImage("database"));
-    iv.setFitHeight(24);
-    iv.setPreserveRatio(true);
-    btnSaveResults.setGraphic(iv);
+    btnSaveResults.setGraphic(ImageLoader.getInstance().loadImage("database", 24));
+    btnSaveResults.disableProperty().bind(Bindings.size(model).isEqualTo(0));
   }
 
   private void initBtnOpenLibrary() {
-    openMenuItem.setAccelerator(new KeyCharacterCombination("O", KeyCombination.CONTROL_DOWN));
-    ImageView iv = new ImageView(ImageLoader.getInstance().loadImage("folder"));
-    iv.setFitHeight(24);
-    iv.setPreserveRatio(true);
-    btnScanFolder.setGraphic(iv);
+    btnScanFolder.setGraphic(ImageLoader.getInstance().loadImage("folder", 24));
     btnScanFolder.setOnAction(e -> openLibrary());
   }
 
@@ -284,7 +272,7 @@ public class MainWindowController implements Initializable {
     pnlProgressIndicator.managedProperty().bind(pnlProgressIndicator.visibleProperty());
     queryProgressBar.managedProperty().bind(queryProgressBar.visibleProperty());
     btnCancelQuery.managedProperty().bind(btnCancelQuery.visibleProperty());
-    btnCancelQuery.setGraphic(new ImageView(ImageLoader.getInstance().loadImage("cancel")));
+    btnCancelQuery.setGraphic(ImageLoader.getInstance().loadImage("cancel"));
   }
 
   @FXML
@@ -293,31 +281,7 @@ public class MainWindowController implements Initializable {
   }
 
   private void initBtnQueryAll() {
-    ImageView iv = new ImageView(ImageLoader.getInstance().loadImage("query"));
-    iv.setFitHeight(24);
-    iv.setPreserveRatio(true);
-    btnQueryAll.setGraphic(iv);
-
-    ListChangeListener<MusicFile> modelEmptyListener = new ListChangeListener<MusicFile>() {
-
-      @Override
-      public void onChanged(Change<? extends MusicFile> c) {
-        boolean modelEmpty = model.isEmpty();
-        boolean disabled = btnQueryAll.isDisabled();
-        if (modelEmpty && !disabled) {
-          disable(true);
-        } else if (!modelEmpty && disabled) {
-          disable(false);
-        }
-      }
-
-      private void disable(boolean value) {
-        btnQueryAll.setDisable(value);
-        btnSaveResults.setDisable(value);
-        btnLoadResults.setDisable(value);
-      }
-    };
-    model.addListener(modelEmptyListener);
+    btnQueryAll.setGraphic(ImageLoader.getInstance().loadImage("query", 24));
     QueryUtility queryUtility = QueryUtility.getInstance();
     queryUtility.getQueryMethods().stream().filter(q -> q.isPerformManyQuery()).forEach(query -> {
       MenuItem menuItem = new MenuItem(query.getName());
@@ -326,9 +290,8 @@ public class MainWindowController implements Initializable {
         queryService = getQueryService(query);
         queryService.restart();
       });
-
     });
-
+    btnQueryAll.disableProperty().bind(Bindings.size(model).isEqualTo(0));
   }
 
   private QueryService getQueryService(Query query) {
@@ -354,35 +317,20 @@ public class MainWindowController implements Initializable {
     };
   }
 
-  private void enableTrackDetailsButton() {
-    boolean empty = musicDetails.getSelectionModel().isEmpty();
-    if (empty) {
-      btnTrackDetails.setDisable(true);
-    } else if (btnTrackDetails.isDisabled()) {
-      btnTrackDetails.setDisable(false);
-    }
-  }
-
   private void filterTableModel() {
-    filteredModel.setPredicate(p -> {
-      String searchStr = txtFilter.getText().toLowerCase();
+    filteredModel.setPredicate(mf -> {
+      String searchStr = txtFilter.getText();
       if (StringUtils.isEmpty(searchStr)) {
-        btnClearFilter.setDisable(true);
-        return true;
-      }
-      btnClearFilter.setDisable(false);
-
-      String band = p.getBand().toLowerCase();
-      String album = p.getAlbum().toLowerCase();
-      String title = p.getTitle().toLowerCase();
-      String genre = p.getGenre().toLowerCase();
-      String year = p.getYear().toLowerCase();
-      if (band.contains(searchStr) || album.contains(searchStr) || title.contains(searchStr) || genre.contains(searchStr)
-          || year.contains(searchStr)) {
         return true;
       }
 
-      return false;
+      String band = mf.getBand();
+      String album = mf.getAlbum();
+      String title = mf.getTitle();
+      String genre = mf.getGenre();
+      String year = mf.getYear();
+      List<String> searchFields = Arrays.asList(band, album, title, genre, year);
+      return searchFields.stream().anyMatch(f -> StringUtils.containsIgnoreCase(f, searchStr));
     });
   }
 

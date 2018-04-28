@@ -5,13 +5,9 @@ import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.JavaContext;
 import com.couchbase.lite.Manager;
-import com.couchbase.lite.Query;
-import com.couchbase.lite.QueryEnumerator;
-import com.couchbase.lite.QueryRow;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,6 +46,12 @@ public class DBManager {
     }
   }
 
+  /**
+   * Save a single musicfile to database. All query results and assigned ids will be persisted.
+   * 
+   * @param mf
+   * @throws CouchbaseLiteException
+   */
   public void saveMusicFile(MusicFile mf) throws CouchbaseLiteException {
     Document document = musicLibraryDB.getDocument(mf.getPath());
     Map<String, Object> allQueryResults = mf.getAllQueryResults();
@@ -59,7 +61,7 @@ public class DBManager {
       document.createRevision();
       // database content if exists
       Map<String, Object> properties = document.getProperties();
-      
+
       Map<String, Object> newValues;
       if (properties != null) {
         newValues = new HashMap<>(properties);
@@ -77,15 +79,24 @@ public class DBManager {
     }
   }
 
+  /**
+   * Save multiple musicFiles to database.
+   * 
+   * @param musicFiles
+   * @throws CouchbaseLiteException
+   */
   public void saveMusicFiles(List<MusicFile> musicFiles) throws CouchbaseLiteException {
     List<MusicFile> dirtyFiles = musicFiles.stream().filter(mf -> mf.getDirty()).collect(Collectors.toList());
     for (MusicFile mf : dirtyFiles) {
       saveMusicFile(mf);
     }
-
-    // allDocumentsQuery();
   }
 
+  /**
+   * Load data for musicFiles if it exists in database.
+   * 
+   * @param musicFiles
+   */
   public void loadMusicFiles(List<MusicFile> musicFiles) {
     musicFiles.forEach(mf -> {
       Document document = musicLibraryDB.getExistingDocument(mf.getPath());
@@ -97,23 +108,6 @@ public class DBManager {
       }
     });
 
-  }
-
-  private void allDocumentsQuery() {
-    Query query = musicLibraryDB.createAllDocumentsQuery();
-    QueryEnumerator result;
-    try {
-      result = query.run();
-
-      for (Iterator<QueryRow> it = result; it.hasNext();) {
-        QueryRow row = it.next();
-        System.out.println(row.getDocument().getProperties());
-      }
-
-      System.out.println("Number of music files in database: " + result.getCount());
-    } catch (CouchbaseLiteException e) {
-      log.error(e);
-    }
   }
 
 }

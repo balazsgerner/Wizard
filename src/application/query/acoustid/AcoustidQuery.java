@@ -6,23 +6,25 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ConnectException;
-import java.net.URL;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import application.query.Query;
-import application.query.QueryUtility;
 
 public class AcoustidQuery extends Query {
 
@@ -36,6 +38,8 @@ public class AcoustidQuery extends Query {
 
   private Properties prop;
 
+  private File tmpFile;
+
   public AcoustidQuery(Query query) throws ConnectException {
     super(query);
   }
@@ -45,29 +49,52 @@ public class AcoustidQuery extends Query {
     try {
       prop = new Properties();
       prop.load(getClass().getResourceAsStream("/resources/properties/acoustid.properties"));
-    } catch (IOException e) {
-      Logger.getLogger(QueryUtility.class).error(e);
+      createTempFileForFpCalc();
+    } catch (IOException | URISyntaxException e) {
+      log.error("Error while initializing acoustid query!", e);
     }
+  }
+
+  /**
+   * Creates a temp copy of fpcalc.exe resource. Needed when run inside jar files. The created file will be deleted on
+   * exit.
+   * 
+   * @throws URISyntaxException
+   * @throws IOException
+   */
+  private void createTempFileForFpCalc() throws URISyntaxException, IOException {
+    InputStream is = getClass().getResourceAsStream(prop.getProperty("fpcalc.location"));
+    tmpFile = File.createTempFile(prop.getProperty("fpcalc.name"), "." + prop.getProperty("fpcalc.extension"));
+    tmpFile.deleteOnExit();
+    IOUtils.copy(is, FileUtils.openOutputStream(tmpFile));
   }
 
   @Override
   protected String createSearchStr() {
     try {
-      URL url = getClass().getResource("/resources/binaries/fpcalc.exe");
-      pb = new ProcessBuilder(url.getPath(), musicFile.getPath());
-      Process p;
-      p = pb.start();
-      BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-      String line = null;
-      line = br.readLine();
-      duration = line.split("DURATION=")[1];
-      line = br.readLine();
-      fingerPrint = line.split("FINGERPRINT=")[1];
-    } catch (IOException e) {
-      Logger.getLogger(QueryUtility.class).error(e);
+      Process p = createProcess();
+      readResults(p);
+    } catch (Exception e) {
+      log.error("Error while reading results!", e);
     }
 
     return null;
+  }
+
+  private void readResults(Process p) throws IOException {
+    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    String line = null;
+    line = br.readLine();
+    duration = line.split("DURATION=")[1];
+    line = br.readLine();
+    fingerPrint = line.split("FINGERPRINT=")[1];
+  }
+
+  private Process createProcess() throws IOException, InterruptedException {
+    pb = new ProcessBuilder(tmpFile.getAbsolutePath(), musicFile.getPath());
+    Process p = pb.start();
+    p.waitFor();
+    return p;
   }
 
   @Override

@@ -57,24 +57,12 @@ public class MusicFile {
     return tag.getFirst(FieldKey.ARTIST);
   }
 
-  public void setBand(String band) {
-    // this.band = band;
-  }
-
   public String getAlbum() {
     return tag.getFirst(FieldKey.ALBUM);
   }
 
-  public void setAlbum(String album) {
-    // this.album = album;
-  }
-
   public String getTitle() {
     return tag.getFirst(FieldKey.TITLE);
-  }
-
-  public void setTitle(String title) {
-    // this.title = title;
   }
 
   public byte[] getArtwork() {
@@ -115,24 +103,18 @@ public class MusicFile {
     return file.getAudioHeader().getSampleRate() + " Hz";
   }
 
-  @Override
-  public String toString() {
-    return "[artist: " + getBand() + ", album: " + getAlbum() + ", title: " + getTitle() + "]";
-  }
-
-  public Map<String, Object> getAttibuteMap() {
+  public Map<String, Object> getAttributeMap() {
     Map<String, Object> attributeMap = new HashMap<>();
+    List<String> filteredMethods = Arrays.asList("attributemap", "assignedids", "artwork", "query", "dirty");
     List<Method> listOfMethods = Arrays.asList(getClass().getDeclaredMethods());
-    Stream<Method> listOfGetters = listOfMethods.stream().filter(p -> {
-      String name = p.getName();
-      return name.startsWith("get") && !(name.equals("getAttibuteMap") || name.equals("getArtwork"));
-    });
 
+    Stream<Method> listOfGetters = listOfMethods.stream().filter(p -> p.getName().startsWith("get"));
     listOfGetters.filter(p -> {
+      // filter unnecessary getter methods
       String mName = p.getName().toLowerCase();
-      return !(mName.contains("query") || mName.contains("dirty"));
+      return !filteredMethods.stream().anyMatch(fp -> mName.contains(fp));
     }).forEach(g -> {
-
+      // add attribute values to result
       String attributeName = g.getName().split("get")[1].toLowerCase();
       attributeName = attributeName.substring(0, 1).toUpperCase() + attributeName.substring(1);
       try {
@@ -216,6 +198,11 @@ public class MusicFile {
       assignedIds = new HashMap<>();
     }
     assignedIds.put(queryMethod, id);
+  }
+
+  @Override
+  public String toString() {
+    return "[artist: " + getBand() + ", album: " + getAlbum() + ", title: " + getTitle() + "]";
   }
 
 }

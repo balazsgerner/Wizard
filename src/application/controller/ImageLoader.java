@@ -7,6 +7,7 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class ImageLoader {
 
@@ -32,9 +33,29 @@ public class ImageLoader {
     return instance;
   }
 
-  public Image loadImage(String imageKey) {
+  /**
+   * Loads an image with original size.
+   * 
+   * @param imageKey - image identifier
+   * @return
+   */
+  public ImageView loadImage(String imageKey) {
     InputStream url = getClass().getResourceAsStream(prop.getProperty(imageKey));
-    return new Image(url);
+    return new ImageView(new Image(url));
+  }
+
+  /**
+   * Loads an image, then resizes it to fit the given height.
+   * 
+   * @param imageKey - image identifier
+   * @param height - height to fit
+   * @return
+   */
+  public ImageView loadImage(String imageKey, int height) {
+    ImageView iv = loadImage(imageKey);
+    iv.setPreserveRatio(true);
+    iv.setFitHeight(height);
+    return iv;
   }
 
 }

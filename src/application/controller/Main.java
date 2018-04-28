@@ -38,7 +38,7 @@ public class Main extends Application {
       scene.getStylesheets().add(getClass().getResource(prop.getProperty("styles.url")).toExternalForm());
 
       primaryStage.setTitle(prop.getProperty("application.title"));
-      primaryStage.getIcons().add(ImageLoader.getInstance().loadImage("icon"));
+      primaryStage.getIcons().add(ImageLoader.getInstance().loadImage("icon").getImage());
       primaryStage.setScene(scene);
       primaryStage.setMaximized(true);
       primaryStage.show();
@@ -50,8 +50,7 @@ public class Main extends Application {
   private void initQueryMethods() {
     try {
       QueryUtility instance = QueryUtility.getInstance();
-      JAXBContext jaxbContext;
-      jaxbContext = JAXBContext.newInstance(QueryUtility.class);
+      JAXBContext jaxbContext = JAXBContext.newInstance(QueryUtility.class);
       Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
       QueryUtility qm = (QueryUtility) jaxbUnmarshaller.unmarshal(getClass().getResource(prop.getProperty("querymethods.url")));
       instance.setQueryMethods(qm.getQueryMethods());
