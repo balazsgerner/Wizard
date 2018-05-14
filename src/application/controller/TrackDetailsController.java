@@ -20,6 +20,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -138,7 +139,7 @@ public class TrackDetailsController implements Initializable {
 
   private Parent callerWindowRoot;
 
-  private Map<String, Object> results;
+  private ObservableMap<String, Object> results;
 
   private Image originalImg;
 
@@ -154,6 +155,7 @@ public class TrackDetailsController implements Initializable {
     this.callerWindowRoot = callerWindowRoot;
     this.musicFile = musicFile;
     this.assignedIds = musicFile.getAssignedIds();
+    this.results = FXCollections.observableMap(new HashMap<String, Object>());
   }
 
   @Override
@@ -167,6 +169,14 @@ public class TrackDetailsController implements Initializable {
     initTblOriginal();
     initTxtIsrc();
     initStatusBarComponents();
+    initPlaceHolder();
+  }
+
+  private void initPlaceHolder() {
+    Label placeHolder = new Label("No results found for track!");
+    placeHolder.getStyleClass().add("placeHolder");
+    listQueryResults.placeholderProperty().bind(Bindings.when(Bindings.isEmpty(listModel).and(Bindings.isNotEmpty(cmbQueryResultName.getItems())))
+        .then(Bindings.createObjectBinding(() -> placeHolder)).otherwise(new Label()));
   }
 
   private void initAssignedIdListener() {
@@ -182,10 +192,11 @@ public class TrackDetailsController implements Initializable {
       String qName = selectionModel.getSelectedItem();
       if (qName != null) {
         String qCode = QueryUtility.getInstance().getQueryCodeByName(qName);
-        results = musicFile.getQueryResult(qCode);
+        results = FXCollections.observableMap(musicFile.getQueryResult(qCode));
       } else {
-        results = new HashMap<>();
+        results = FXCollections.emptyObservableMap();
       }
+
       refreshUIAfterQuery(null);
     });
 
@@ -212,11 +223,6 @@ public class TrackDetailsController implements Initializable {
     });
   }
 
-  /**
-   * Újratölti a combobox modelljét
-   * 
-   * @return - üres-e az új modell
-   */
   private boolean loadQueryResultNames() {
     QueryUtility qUtility = QueryUtility.getInstance();
     Map<String, Object> allQueryResults = musicFile.getAllQueryResults();
@@ -234,7 +240,6 @@ public class TrackDetailsController implements Initializable {
 
     cmbQueryResultName.setDisable(false);
     return false;
-
   }
 
   private void initStatusBarComponents() {
@@ -330,7 +335,6 @@ public class TrackDetailsController implements Initializable {
   private void runQueryInBackground(Query query) {
     QueryService service = getQueryService(query);
     service.restart();
-
   }
 
   private void refreshUIAfterQuery(String select) {
@@ -338,11 +342,10 @@ public class TrackDetailsController implements Initializable {
       Set<String> keySet = results.keySet();
       listModel.setAll(keySet);
 
-      if (listModel.isEmpty()) {
-        Label placeHolder = new Label("No results found for track!");
-        placeHolder.getStyleClass().add("placeHolder");
-        listQueryResults.setPlaceholder(placeHolder);
-      }
+      // if (listModel.isEmpty()) {
+      // placeHolder.getStyleClass().add("placeHolder");
+      // listQueryResults.setPlaceholder(placeHolder);
+      // }
 
       MultipleSelectionModel<String> selectionModel = listQueryResults.getSelectionModel();
       if (select == null) {
@@ -500,7 +503,8 @@ public class TrackDetailsController implements Initializable {
 
     @Override
     protected void succeeded() {
-      results = musicFile.getLatestQueryResult();
+      results.clear();
+      results.putAll(musicFile.getLatestQueryResult());
       super.succeeded();
     }
 

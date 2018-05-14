@@ -22,9 +22,16 @@ public class DBManager {
 
   private static DBManager instance = null;
 
+  private boolean isTest = false;
+  
   private Database musicLibraryDB;
 
   protected DBManager() {
+    init();
+  }
+
+  public DBManager(boolean isTest) {
+    this.isTest = isTest;
     init();
   }
 
@@ -35,12 +42,20 @@ public class DBManager {
     return instance;
   }
 
+  public static DBManager getInstance(boolean isTest) {
+    if (instance == null) {
+      instance = new DBManager(isTest);
+    }
+    return instance;
+  }
+  
+
   private void init() {
     JavaContext ctx = new JavaContext();
     Manager manager;
     try {
       manager = new Manager(ctx, Manager.DEFAULT_OPTIONS);
-      musicLibraryDB = manager.getDatabase("musiclibrary_db");
+      musicLibraryDB = manager.getDatabase(isTest ? "test_db" : "musiclibrary_db");
     } catch (IOException | CouchbaseLiteException e) {
       log.fatal("Error while initializing DBManager!", e);
     }
@@ -53,12 +68,13 @@ public class DBManager {
    * @throws CouchbaseLiteException
    */
   public void saveMusicFile(MusicFile mf) throws CouchbaseLiteException {
-    Document document = musicLibraryDB.getDocument(mf.getPath());
-    Map<String, Object> allQueryResults = mf.getAllQueryResults();
-    allQueryResults.put("latest_query", mf.getLastQueryCode());
-    allQueryResults.put("assigned_ids", mf.getAssignedIds());
     try {
+      Document document = musicLibraryDB.getDocument(mf.getPath());
+      Map<String, Object> allQueryResults = mf.getAllQueryResults();
+      allQueryResults.put("latest_query", mf.getLastQueryCode());
+      allQueryResults.put("assigned_ids", mf.getAssignedIds());
       document.createRevision();
+
       // database content if exists
       Map<String, Object> properties = document.getProperties();
 

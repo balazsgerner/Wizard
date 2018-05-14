@@ -59,6 +59,10 @@ public class QueryUtility {
     return queryMethodsByCode.get(code).getName();
   }
 
+  public Query getQueryMethodByCode(String code) {
+    return queryMethodsByCode.get(code);
+  }
+
   public String getQueryCodeByName(String name) {
     for (Query q : queryMethods) {
       if (q.getName().equals(name)) {
