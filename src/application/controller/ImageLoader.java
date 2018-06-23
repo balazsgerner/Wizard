@@ -2,6 +2,7 @@ package application.controller;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -27,9 +28,7 @@ public class ImageLoader {
   }
 
   public static ImageLoader getInstance() {
-    if (instance == null) {
-      instance = new ImageLoader();
-    }
+    instance = Optional.ofNullable(instance).orElse(new ImageLoader());
     return instance;
   }
 

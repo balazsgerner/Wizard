@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 import org.apache.commons.io.FilenameUtils;
@@ -120,7 +121,8 @@ public class MainWindowController implements Initializable {
     DirectoryChooser chooser = new DirectoryChooser();
     chooser.setTitle("Locate music library folder");
     File directory = chooser.showDialog(root.getScene().getWindow());
-    if (directory != null) {
+    Optional<File> dir = Optional.ofNullable(directory);
+    dir.ifPresent(file -> {
       model.clear();
       trackNumber.setText("");
       pnlProgressIndicator.setVisible(false);
@@ -128,19 +130,15 @@ public class MainWindowController implements Initializable {
       scanProgressIndicator.setVisible(true);
       clearFilterText();
       txtFilter.setDisable(true);
+      openLibrary(directory);
+    });
 
-      openLibraryService = getOpenLibraryService(directory);
-      openLibraryService.restart();
-    }
   }
 
-  private OpenLibraryService getOpenLibraryService(File directory) {
-    if (openLibraryService == null) {
-      return new OpenLibraryService(directory);
-    } else {
-      openLibraryService.setDirectory(directory);
-      return openLibraryService;
-    }
+  private void openLibrary(File directory) {
+    OpenLibraryService service = Optional.ofNullable(openLibraryService).orElse(new OpenLibraryService());
+    service.setDirectory(directory);
+    service.restart();
   }
 
   private void scanLibrary(File library) {
@@ -148,8 +146,7 @@ public class MainWindowController implements Initializable {
       if (file.isDirectory()) {
         scanLibrary(file);
       } else {
-        String ext = FilenameUtils.getExtension(file.getName());
-        if (supportedExtensions.contains(ext)) {
+        if (supportedExtensions.contains(FilenameUtils.getExtension(file.getName()))) {
           model.add(new MusicFile(file));
         }
       }
@@ -159,28 +156,12 @@ public class MainWindowController implements Initializable {
 
   @FXML
   private void saveAllResultsToDatabase() {
-    getSaveService().restart();
+    Optional.ofNullable(saveService).orElse(new SaveService()).restart();
   }
 
   @FXML
   private void loadResults() {
-    getLoadService().restart();
-  }
-
-  private DBService getSaveService() {
-    if (saveService == null) {
-      return new SaveService();
-    } else {
-      return saveService;
-    }
-  }
-
-  private DBService getLoadService() {
-    if (loadService == null) {
-      return new LoadService();
-    } else {
-      return loadService;
-    }
+    Optional.ofNullable(loadService).orElse(new LoadService()).restart();
   }
 
   @FXML
@@ -207,7 +188,7 @@ public class MainWindowController implements Initializable {
 
   private void initBtnLoadResults() {
     btnLoadResults.setGraphic(ImageLoader.getInstance().loadImage("database.load", 24));
-    btnLoadResults.disableProperty().bind(Bindings.size(model).isEqualTo(0));
+    btnLoadResults.disableProperty().bind(Bindings.isEmpty(model));
   }
 
   private void initTxtFilter() {
@@ -252,12 +233,12 @@ public class MainWindowController implements Initializable {
   private void initBtnTrackDetails() {
     btnTrackDetails.setGraphic(ImageLoader.getInstance().loadImage("details", 24));
     btnTrackDetails.setOnAction(e -> loadTrackDetailView(musicDetails.getSelectionModel().getSelectedItem()));
-    btnTrackDetails.disableProperty().bind(Bindings.isNull(musicDetails.getSelectionModel().selectedItemProperty()));
+    btnTrackDetails.disableProperty().bind(musicDetails.getSelectionModel().selectedItemProperty().isNull());
   }
 
   private void initBtnSaveResults() {
     btnSaveResults.setGraphic(ImageLoader.getInstance().loadImage("database", 24));
-    btnSaveResults.disableProperty().bind(Bindings.size(model).isEqualTo(0));
+    btnSaveResults.disableProperty().bind(Bindings.isEmpty(model));
   }
 
   private void initBtnOpenLibrary() {
@@ -282,25 +263,18 @@ public class MainWindowController implements Initializable {
 
   private void initBtnQueryAll() {
     btnQueryAll.setGraphic(ImageLoader.getInstance().loadImage("query", 24));
-    QueryUtility queryUtility = QueryUtility.getInstance();
-    queryUtility.getQueryMethods().stream().filter(q -> q.isPerformManyQuery()).forEach(query -> {
+    QueryUtility instance = QueryUtility.getInstance();
+    List<Query> queryMethods = instance.getQueryMethods();
+    queryMethods.stream().filter(q -> q.isPerformManyQuery()).forEach(query -> {
       MenuItem menuItem = new MenuItem(query.getName());
       btnQueryAll.getItems().add(menuItem);
       menuItem.setOnAction(e -> {
-        queryService = getQueryService(query);
+        queryService = Optional.ofNullable(queryService).orElse(new QueryService());
+        queryService.setQuery(query);
         queryService.restart();
       });
     });
-    btnQueryAll.disableProperty().bind(Bindings.size(model).isEqualTo(0));
-  }
-
-  private QueryService getQueryService(Query query) {
-    if (queryService == null) {
-      return new QueryService(query);
-    } else {
-      queryService.setQuery(query);
-      return queryService;
-    }
+    btnQueryAll.disableProperty().bind(Bindings.isEmpty(model));
   }
 
   private Callback<TableView<MusicFile>, TableRow<MusicFile>> createRowFactory() {
@@ -324,13 +298,8 @@ public class MainWindowController implements Initializable {
         return true;
       }
 
-      String band = mf.getBand();
-      String album = mf.getAlbum();
-      String title = mf.getTitle();
-      String genre = mf.getGenre();
-      String year = mf.getYear();
-      List<String> searchFields = Arrays.asList(band, album, title, genre, year);
-      return searchFields.stream().anyMatch(f -> StringUtils.containsIgnoreCase(f, searchStr));
+      return Arrays.asList(mf.getBand(), mf.getAlbum(), mf.getTitle(), mf.getGenre(), mf.getYear()).stream()
+          .anyMatch(f -> StringUtils.containsIgnoreCase(f, searchStr));
     });
   }
 
@@ -405,10 +374,6 @@ public class MainWindowController implements Initializable {
   public final class QueryService extends ScanService {
 
     private Query query;
-
-    private QueryService(Query query) {
-      this.query = query;
-    }
 
     @Override
     protected Task<Void> createTask() {
@@ -498,26 +463,18 @@ public class MainWindowController implements Initializable {
   }
 
   private void showSuccessMsg(String message) {
-    Platform.runLater(() -> {
-      lblQueryStatus.getStyleClass().setAll("success");
-      lblQueryStatus.setText(message);
-    });
+    lblQueryStatus.getStyleClass().setAll("success");
+    lblQueryStatus.setText(message);
   }
 
   private void showErrorMsg(String message) {
-    Platform.runLater(() -> {
-      lblQueryStatus.getStyleClass().setAll("error");
-      lblQueryStatus.setText(message);
-    });
+    lblQueryStatus.getStyleClass().setAll("error");
+    lblQueryStatus.setText(message);
   }
 
   private class OpenLibraryService extends ScanService {
 
     private File directory;
-
-    private OpenLibraryService(File directory) {
-      this.directory = directory;
-    }
 
     public void setDirectory(File directory) {
       this.directory = directory;
@@ -538,18 +495,14 @@ public class MainWindowController implements Initializable {
 
     @Override
     protected void initUI() {
-      Platform.runLater(() -> {
-        trackNumber.getStyleClass().setAll("bold");
-        scanProgressIndicator.progressProperty().bind(progressProperty());
-      });
+      trackNumber.getStyleClass().setAll("bold");
+      scanProgressIndicator.progressProperty().bind(progressProperty());
     }
 
     @Override
     protected void showSuccess(String message) {
-      Platform.runLater(() -> {
-        trackNumber.setText(message);
-        filterTableModel();
-      });
+      trackNumber.setText(message);
+      filterTableModel();
     }
 
     @Override
@@ -586,23 +539,18 @@ public class MainWindowController implements Initializable {
 
     @Override
     protected void initUI() {
-      Platform.runLater(() -> {
-        scanProgressIndicator.progressProperty().bind(progressProperty());
-
-        pnlProgressIndicator.setVisible(true);
-        lblQueryName.setVisible(false);
-        queryProgressBar.setVisible(false);
-        btnCancelQuery.setVisible(false);
-        lblQueryStatus.getStyleClass().setAll("bold");
-        lblQueryStatus.setText(getTaskStartedMsg());
-        lblQueryStatus.setVisible(true);
-
-        pnlScanIndicator.setVisible(true);
-        trackNumber.setVisible(false);
-        scanProgressIndicator.setVisible(true);
-        lblQueryStatus.setPadding(new Insets(0, 5, 0, 0));
-      });
-
+      scanProgressIndicator.progressProperty().bind(progressProperty());
+      pnlProgressIndicator.setVisible(true);
+      lblQueryName.setVisible(false);
+      queryProgressBar.setVisible(false);
+      btnCancelQuery.setVisible(false);
+      lblQueryStatus.getStyleClass().setAll("bold");
+      lblQueryStatus.setText(getTaskStartedMsg());
+      lblQueryStatus.setVisible(true);
+      pnlScanIndicator.setVisible(true);
+      trackNumber.setVisible(false);
+      scanProgressIndicator.setVisible(true);
+      lblQueryStatus.setPadding(new Insets(0, 5, 0, 0));
     }
 
     @Override

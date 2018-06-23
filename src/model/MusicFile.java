@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
@@ -66,8 +67,8 @@ public class MusicFile {
   }
 
   public byte[] getArtwork() {
-    Artwork artWork = tag.getFirstArtwork();
-    return artWork == null ? null : artWork.getBinaryData();
+    Optional<Artwork> artWork = Optional.ofNullable(tag.getFirstArtwork());
+    return artWork.isPresent() ? artWork.get().getBinaryData() : null;
   }
 
   public String getGenre() {
@@ -153,9 +154,7 @@ public class MusicFile {
   }
 
   public void setQueryResult(String queryCode, QueryResult result) {
-    if (queryResultMap == null) {
-      queryResultMap = new HashMap<>();
-    }
+    queryResultMap = Optional.ofNullable(queryResultMap).orElse(new HashMap<>());
     queryResultMap.put(queryCode, result);
     dirty.set(true);
   }

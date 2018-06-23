@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -36,19 +37,14 @@ public class DBManager {
   }
 
   public static DBManager getInstance() {
-    if (instance == null) {
-      instance = new DBManager();
-    }
+    instance = Optional.ofNullable(instance).orElse(new DBManager());
     return instance;
   }
 
   public static DBManager getInstance(boolean isTest) {
-    if (instance == null) {
-      instance = new DBManager(isTest);
-    }
+    instance = Optional.ofNullable(instance).orElse(new DBManager(isTest));
     return instance;
   }
-  
 
   private void init() {
     JavaContext ctx = new JavaContext();

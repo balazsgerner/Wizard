@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -41,12 +42,8 @@ public abstract class MyWebServiceWS2 extends DefaultWebServiceWs2 {
   public Metadata get(String entity, String id, List<String> includeParams, Map<String, String> filterParams)
       throws WebServiceException, MbXMLException {
     String url = this.makeURL(entity, id, includeParams, filterParams);
-
-    Metadata results = doGet(url);
-    if (results == null) {
-      throw new WebServiceException("Cannot connect to web service, now aborting!");
-    }
-    return results;
+    Optional<Metadata> results = Optional.ofNullable(doGet(url));
+    return results.orElseThrow(() -> new WebServiceException("Cannot connect to web service, now aborting!"));
   }
 
   @Override

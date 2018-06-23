@@ -5,6 +5,7 @@ import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -23,7 +24,7 @@ public class QueryUtility {
 
   public static Logger log = Logger.getLogger(QueryUtility.class);
 
-  private static QueryUtility instance = null;
+  private static QueryUtility instance;
 
   @XmlElement(name = "query", type = Query.class)
   private List<Query> queryMethods;
@@ -32,9 +33,7 @@ public class QueryUtility {
   private Map<String, Query> queryMethodsByCode = new HashMap<String, Query>();
 
   public static QueryUtility getInstance() {
-    if (instance == null) {
-      instance = new QueryUtility();
-    }
+    instance = Optional.ofNullable(instance).orElse(new QueryUtility());
     return instance;
   }
 
@@ -64,18 +63,12 @@ public class QueryUtility {
   }
 
   public String getQueryCodeByName(String name) {
-    for (Query q : queryMethods) {
-      if (q.getName().equals(name)) {
-        return q.getCode();
-      }
-    }
-    return null;
+    return queryMethods.stream().filter(q -> q.getName().equals(name)).findFirst().get().getCode();
   }
 
   public void performQuery(MusicFile musicFile, Query query) throws ConnectException {
     try {
-      Query queryMethod = queryMethodsByCode.get(query.getCode());
-      queryMethod.performQuery(musicFile);
+      queryMethodsByCode.get(query.getCode()).performQuery(musicFile);
     } catch (ConnectException e) {
       log.error("Cannot connect to web service!", e);
       throw e;
@@ -98,8 +91,7 @@ public class QueryUtility {
       if (queryTask.isCancelled()) {
         return;
       }
-      MusicFile musicFile = musicFiles.get(i);
-      performQuery(musicFile, query);
+      performQuery(musicFiles.get(i), query);
       queryTask.updateProgress(i, listSize);
     }
 

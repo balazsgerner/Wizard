@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -197,7 +198,7 @@ public class TrackDetailsController implements Initializable {
         results = FXCollections.emptyObservableMap();
       }
 
-      refreshUIAfterQuery(null);
+      refreshUIAfterQuery(Optional.empty());
     });
 
     // listQueryResults
@@ -225,16 +226,16 @@ public class TrackDetailsController implements Initializable {
 
   private boolean loadQueryResultNames() {
     QueryUtility qUtility = QueryUtility.getInstance();
-    Map<String, Object> allQueryResults = musicFile.getAllQueryResults();
+    Optional<Map<String, Object>> allQueryResults = Optional.ofNullable(musicFile.getAllQueryResults());
 
-    if (allQueryResults == null) {
+    if (!allQueryResults.isPresent()) {
       cmbQueryResultName.setDisable(true);
       return true;
     }
 
     ObservableList<String> items = cmbQueryResultName.getItems();
     items.clear();
-    allQueryResults.keySet().forEach(q -> {
+    allQueryResults.get().keySet().forEach(q -> {
       items.add(qUtility.getQueryNameByCode(q));
     });
 
@@ -286,9 +287,8 @@ public class TrackDetailsController implements Initializable {
   private Callback<CellDataFeatures<Entry<String, Object>, String>, ObservableValue<String>> createMapValueColumnFactory() {
     return param -> {
       Entry<String, Object> mapEntry = param.getValue();
-      Object value = mapEntry.getValue();
-      String text = value == null ? StringUtils.EMPTY : value.toString();
-      return new SimpleStringProperty(text);
+      Optional<Object>  value = Optional.ofNullable(mapEntry.getValue());
+      return new SimpleStringProperty(value.isPresent() ? value.get().toString() : StringUtils.EMPTY);
     };
   }
 
@@ -324,34 +324,26 @@ public class TrackDetailsController implements Initializable {
   }
 
   private QueryService getQueryService(Query query) {
-    if (queryService == null) {
-      queryService = new QueryService(query);
-    } else {
-      queryService.setQuery(query);
-    }
+    queryService = Optional.ofNullable(queryService).orElse(new QueryService());
+    queryService.setQuery(query);
     return queryService;
   }
 
   private void runQueryInBackground(Query query) {
-    QueryService service = getQueryService(query);
-    service.restart();
+    getQueryService(query).restart();
   }
 
-  private void refreshUIAfterQuery(String select) {
+  private void refreshUIAfterQuery(Optional<String> select) {
     Platform.runLater(() -> {
       Set<String> keySet = results.keySet();
       listModel.setAll(keySet);
 
-      // if (listModel.isEmpty()) {
-      // placeHolder.getStyleClass().add("placeHolder");
-      // listQueryResults.setPlaceholder(placeHolder);
-      // }
-
       MultipleSelectionModel<String> selectionModel = listQueryResults.getSelectionModel();
-      if (select == null) {
-        selectionModel.selectFirst();
+      
+      if (select.isPresent()) {
+        selectionModel.select(select.get());
       } else {
-        selectionModel.select(select);
+        selectionModel.selectFirst();
       }
     });
   }
@@ -450,7 +442,7 @@ public class TrackDetailsController implements Initializable {
     String selectedId = listQueryResults.getSelectionModel().getSelectedItem();
     musicFile.assignId(qCode, selectedId);
     this.assignedIds = musicFile.getAssignedIds();
-    refreshUIAfterQuery(selectedId);
+    refreshUIAfterQuery(Optional.of(selectedId));
   }
 
   @FXML
@@ -483,8 +475,7 @@ public class TrackDetailsController implements Initializable {
 
     private Query query;
 
-    public QueryService(Query query) {
-      this.query = query;
+    public QueryService() {
       progressIndicator.progressProperty().bind(progressProperty());
     }
 
