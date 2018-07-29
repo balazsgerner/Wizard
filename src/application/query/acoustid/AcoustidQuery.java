@@ -1,30 +1,29 @@
 package application.query.acoustid;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ConnectException;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import application.query.Query;
+import jdk.incubator.http.HttpClient;
+import jdk.incubator.http.HttpRequest;
+import jdk.incubator.http.HttpResponse;
 
 public class AcoustidQuery extends Query {
 
@@ -40,6 +39,8 @@ public class AcoustidQuery extends Query {
 
   private File tmpFile;
 
+  private HttpClient httpClient;
+
   public AcoustidQuery(Query query) throws ConnectException {
     super(query);
   }
@@ -47,6 +48,7 @@ public class AcoustidQuery extends Query {
   @Override
   protected void init() throws ConnectException {
     try {
+      httpClient = HttpClient.newHttpClient();
       prop = new Properties();
       prop.load(getClass().getResourceAsStream("/resources/properties/acoustid.properties"));
       createTempFileForFpCalc();
@@ -99,54 +101,53 @@ public class AcoustidQuery extends Query {
 
   @Override
   protected void fillResultsMap(String searchString) throws ConnectException {
-    HttpResponse<JsonNode> response;
     try {
-      response = Unirest.get(prop.getProperty("acoustid_url")).header("accept", "application/json")
-          .queryString("client", prop.getProperty("acoustid_client_key")).queryString("duration", duration).queryString("fingerprint", fingerPrint)
-          .queryString("meta", prop.getProperty("acoustid_meta")).asJson();
-      JSONObject jsonObject = new JSONObject(response.getBody().toString());
-      JSONArray resultsArray = jsonObject.getJSONArray("results");
-
-      for (int i = 0; i < resultsArray.length(); i++) {
-        JSONObject track = resultsArray.getJSONObject(i);
-        try {
-          JSONArray recordings = track.getJSONArray("recordings");
-          for (int j = 0; j < recordings.length(); j++) {
-
-            Map<String, Object> recordingData = new HashMap<>();
-            JSONObject recording = recordings.getJSONObject(j);
-
-            String recordingId = recording.getString("id");
-            recordingData.put("recordingid", recordingId);
-
-            JSONArray artists = recording.getJSONArray("artists");
-            List<String> artistNames = new ArrayList<>();
-            for (int k = 0; k < artists.length(); k++) {
-              JSONObject artist = artists.getJSONObject(k);
-              artistNames.add(artist.getString("name"));
-            }
-            recordingData.put("Artist", String.join(", ", artistNames));
-
-            try {
-              int drtn = recording.getInt("duration");
-              String drtnStr = String.format("%02d:%02d", drtn / 60, drtn % 60);
-              recordingData.put("duration", drtnStr);
-            } catch (JSONException e) {
-            } finally {
-              try {
-                recordingData.put("recording title", recording.getString("title"));
-              } finally {
-                result.put(recordingId, recordingData);
-              }
-            }
-          }
-
-        } catch (JSONException e) {
-        }
+      HttpRequest request = HttpRequest.newBuilder(new URI("http", "api.acoustid.org", "/v2/lookup", buildQueryStr(), null)).build();
+      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandler.asString());
+      
+      JSONObject jsonObject = new JSONObject(response.body());
+      Optional<JSONArray> optResultsArray = Optional.ofNullable(jsonObject.optJSONArray("results"));
+      if(!optResultsArray.isPresent()) {
+        log.error("Result array is empty, server response code: " + response.statusCode());
+        return;
       }
-    } catch (UnirestException e1) {
+      
+      JSONArray resultArray = optResultsArray.get();
+      for (int i = 0; i < resultArray.length(); i++) {
+        Optional<JSONObject> optTrack = Optional.ofNullable(resultArray.optJSONObject(i));
+        optTrack.ifPresent(track -> {
+          Optional<JSONArray> optRecordings = Optional.of(track.optJSONArray("recordings"));
+          optRecordings.ifPresent(recordings -> {
+            for (int j = 0; j < recordings.length(); j++) {
+              JSONObject recording = recordings.getJSONObject(j);
+              String recordingId = recording.getString("id");
+              var recordingData = createRecordingDataMap(recording, recordingId);
+              result.put(recordingId, recordingData);
+            }
+          });
+        });
+      }
+    } catch (Exception e1) {
       throw new ConnectException(e1.getMessage());
     }
+  }
+
+  private Map<String, Object> createRecordingDataMap(JSONObject recording, String recordingId) {
+    var recordingData = new HashMap<String, Object>();
+    recordingData.put("recordingid", recordingId);
+    Optional<JSONArray> optArtists = Optional.of(recording.optJSONArray("artists"));
+    optArtists.ifPresent(artists -> recordingData.put("Artist", artists.join(",")));
+    int duration = recording.optInt("duration", 0);
+    recordingData.put("duration", String.format("%02d:%02d", duration / 60, duration % 60));
+    recordingData.put("recording title", recording.optString("title", ""));
+    return recordingData;
+  }
+
+  private String buildQueryStr() {
+    var paramMap = Map.of("client", prop.getProperty("acoustid_client_key"), "duration", duration, "fingerprint", fingerPrint, "meta",
+        prop.getProperty("acoustid_meta"));
+    List<String> paramList = paramMap.entrySet().stream().map(entry -> String.join("=", entry.getKey(), entry.getValue())).collect(Collectors.toList());
+    return String.join("&", paramList);
   }
 
 }
